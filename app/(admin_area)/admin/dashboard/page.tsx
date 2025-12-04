@@ -1,0 +1,98 @@
+import { fetchDataBarang, fetchTotalBarang } from "@/data/barang";
+import {
+  fetchDataPeminjaman,
+  fetchTotalPeminjamanCount,
+} from "@/data/peminjaman";
+import Image from "next/image";
+import Link from "next/link";
+import RecentData from "./RecentData";
+
+export default async function DashboardPage() {
+  // Ambil data secara paralel
+  const [rawData, totalBarang, totalPeminjaman] = await Promise.all([
+    fetchDataPeminjaman("", 1),
+    fetchTotalBarang(),
+    fetchTotalPeminjamanCount(""),
+  ]);
+
+  // Serialisasi data
+  const data = rawData.map((item) => ({
+    ...item,
+    tanggal_peminjaman: item.tanggal_peminjaman
+      ? item.tanggal_peminjaman.toISOString()
+      : null,
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
+  }));
+
+  return (
+    <div>
+      <div className="bg-white p-4 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.05)] border border-blue-100 flex items-center gap-3 mb-4">
+        <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-200">
+          <Image
+            src="/Dashboard_blue_icon.png"
+            width={20}
+            height={20}
+            alt="Dashboard Icon"
+            className="brightness-0 invert"
+          />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-500 text-xs">
+            Ringkasan aktivitas gudang kelurahan
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Kartu Jumlah Barang */}
+        <div className="bg-[#1E88E5] p-5 rounded-xl shadow-md text-white flex justify-between items-center">
+          <div>
+            <p className="text-lg font-semibold">Jumlah Barang:</p>
+            <p className="text-2xl font-bold mt-1">{totalBarang}</p>
+
+            <Link href="/admin/dashboard/data-barang">
+              <button className="mt-3 bg-white text-blue-600 px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-gray-200">
+                detail
+              </button>
+            </Link>
+          </div>
+
+          {/* ikon barang */}
+          <div className="w-16 h-16 opacity-90">
+            <Image src="/barang.png" width={64} height={64} alt="icon barang" />
+          </div>
+        </div>
+
+        {/* Kartu Jumlah Peminjaman */}
+        <div className="bg-[#1E88E5] p-5 rounded-xl shadow-md text-white flex justify-between items-center">
+          <div>
+            <p className="text-lg font-semibold">Jumlah Peminjaman:</p>
+            <p className="text-2xl font-bold mt-1">{totalPeminjaman}</p>
+
+            <Link href="/admin/dashboard/pinjam-barang">
+              <button className="mt-3 bg-white text-blue-600 px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-gray-200">
+                detail
+              </button>
+            </Link>
+          </div>
+
+          {/* ikon peminjam */}
+          <div className="w-16 h-16 opacity-90">
+            <Image
+              src="/pinjam.png"
+              width={64}
+              height={64}
+              alt="icon peminjaman"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <RecentData data={data} />
+      </div>
+    </div>
+  );
+}

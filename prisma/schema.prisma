@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  output        = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+  role     Role   @default(user)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Model Data Barang 
+model Data_barang {
+  id_barang        Int     @id @default(autoincrement())
+  nama_barang      String
+  is_stock_bulanan Boolean @default(false)
+  satuan_barang    String
+  stok_barang      Int
+
+  barang_masuk  Data_barang_masuk[]
+  barang_keluar Data_barang_keluar[]
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  peminjamans Peminjaman[]
+
+  @@index([nama_barang])
+}
+
+// Model Barang Masuk 
+model Data_barang_masuk {
+  id_barang_masuk Int         @id @default(autoincrement())
+  id_barang       Int
+  jumlah_barang   Int
+  tanggal_masuk   DateTime
+  sumber_barang   String
+  data_barang     Data_barang @relation(fields: [id_barang], references: [id_barang])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([id_barang])
+}
+
+// Model Barang Keluar 
+model Data_barang_keluar {
+  id_barang_keluar Int         @id @default(autoincrement())
+  id_barang        Int
+  tanggal_keluar   DateTime
+  jumlah_keluar    Int
+  keterangan       String
+  data_barang      Data_barang @relation(fields: [id_barang], references: [id_barang])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([id_barang])
+}
+
+// Model Peminjaman Barang
+model Peminjaman {
+  id_peminjaman      Int       @id @default(autoincrement())
+  id_barang          Int
+  nomor_ktp          String    @default("-")
+  nama_peminjam      String
+  kategori_peminjam  String    @default("Warga")
+  no_telepon         String
+  alamat             String    @default("-")
+  jumlah_peminjaman  Int
+  status_peminjaman  String    @default("Belum Dikembalikan")
+  tanggal_peminjaman DateTime?
+
+  data_barang Data_barang @relation(fields: [id_barang], references: [id_barang])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([nama_peminjam])
+  @@index([status_peminjaman])
+  @@index([id_barang])
+}
+
+enum Role {
+  user
+  admin
+}
