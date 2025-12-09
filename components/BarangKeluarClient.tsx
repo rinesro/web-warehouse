@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaTruck } from "react-icons/fa"; 
 import { Table, Column } from "@/components/Table";
 import EditBarangKeluarButton from "./EditBarangKeluarButton";
 import DeleteBarangKeluarButton from "./DeleteBarangKeluarButton";
@@ -51,7 +50,7 @@ const BarangKeluarClient = ({
     {
       header: "Nama Barang",
       accessorKey: "data_barang",
-      cell: (item) => item.data_barang.nama_barang,
+      cell: (item) => item.data_barang?.nama_barang || "Data Dihapus", 
     },
     {
       header: "Tanggal Keluar",
@@ -70,7 +69,7 @@ const BarangKeluarClient = ({
     {
       header: "Jumlah",
       accessorKey: "jumlah_keluar",
-      cell: (item) => `${item.jumlah_keluar} ${item.data_barang.satuan_barang}`,
+      cell: (item) => `${item.jumlah_keluar} ${item.data_barang?.satuan_barang || ''}`,
     },
     {
       header: "Aksi",
@@ -79,7 +78,7 @@ const BarangKeluarClient = ({
           <EditBarangKeluarButton item={item} items={items} />
           <DeleteBarangKeluarButton
             id={item.id_barang_keluar}
-            nama_barang={item.data_barang.nama_barang}
+            nama_barang={item.data_barang?.nama_barang}
           />
         </div>
       ),
@@ -100,14 +99,7 @@ const BarangKeluarClient = ({
       <PageHeader
         title="Barang Keluar"
         description="Kelola data barang keluar gudang kelurahan"
-        icon={
-          <Image
-            src="/barang_keluar_white_icon.png"
-            width={24}
-            height={24}
-            alt="Barang Keluar Icon"
-          />
-        }
+        icon={<FaTruck size={24} />} 
         actionButton={
           <div className="relative">
             <button
