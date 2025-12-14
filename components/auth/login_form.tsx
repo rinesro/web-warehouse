@@ -73,8 +73,10 @@ export default function LoginForm() {
 
           {/* Alert Error Box */}
           {state?.message && (
-            <div className="bg-[#ffebee] text-[#c62828] p-3 rounded border border-[#ef9a9a] mb-5 text-sm flex items-center gap-2 animate-pulse shadow-sm">
-              <span className="font-bold text-lg">!</span> {state.message}
+            <div className="mb-4 text-center animate-pulse">
+               <p className="text-red-300 font-bold text-sm bg-red-900/20 py-1 px-3 rounded-full inline-block border border-red-400/50">
+                 ⚠️ {state.message}
+               </p>
             </div>
           )}
 

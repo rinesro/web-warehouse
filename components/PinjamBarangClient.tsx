@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Table, Column } from "@/components/Table";
 import { FaPlus, FaHandshake } from "react-icons/fa";
 import DeletePeminjamanButton from "@/components/DeletePeminjamanButton";
 import ReturnPeminjamanButton from "@/components/ReturnPeminjamanButton";
-import EditPeminjamanButton from "./EditPeminjamanButton";
+import EditPeminjamanButton from "@/components/EditPeminjamanButton"; 
 
 interface Peminjaman_with_relation {
   id_peminjaman: number;
@@ -15,7 +15,7 @@ interface Peminjaman_with_relation {
   nama_peminjam: string;
   kategori_peminjam: string;
   no_telepon: string;
-  alamat: string; 
+  alamat: string;
   jumlah_peminjaman: number;
   status_peminjaman: string;
   tanggal_peminjaman: string | null;
@@ -34,7 +34,7 @@ interface PeminjamanUI {
   id_barang: number;
   nama_barang: string;
   tanggal_pinjam: string; 
-  display_tanggal: string; 
+  display_tanggal: string;
   jumlah: number;
   status: string;
   no_telepon: string;
@@ -42,10 +42,10 @@ interface PeminjamanUI {
 }
 
 interface ItemBarang {
-    id_barang: number;
-    nama_barang: string;
-    stok_barang: number;
-    satuan_barang: string;
+  id_barang: number;
+  nama_barang: string;
+  stok_barang: number;
+  satuan_barang: string;
 }
 
 interface PinjamBarangClientProps {
@@ -53,7 +53,7 @@ interface PinjamBarangClientProps {
   totalPages: number;
   currentPage: number;
   totalItems: number;
-  items: ItemBarang[]; 
+  items: ItemBarang[];
 }
 
 export default function PinjamBarangClient({
@@ -64,19 +64,28 @@ export default function PinjamBarangClient({
   items,
 }: PinjamBarangClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const uiData = useMemo<PeminjamanUI[]>(
-    () =>
-      data.map((item) => ({
+  const currentSort = searchParams.get("sort") || "date-desc";
+
+
+  const formattedData = useMemo<PeminjamanUI[]>(() => {
+    return data.map((item) => {
+      let dateObj: Date | null = null;
+      if (item.tanggal_peminjaman) {
+        dateObj = new Date(item.tanggal_peminjaman);
+      }
+
+      return {
         id: item.id_peminjaman,
         nomor_ktp: item.nomor_ktp,
         nama_peminjam: item.nama_peminjam,
         kategori: item.kategori_peminjam,
         id_barang: item.id_barang,
         nama_barang: item.data_barang.nama_barang,
-        tanggal_pinjam: item.tanggal_peminjaman ? item.tanggal_peminjaman.toString() : "",
-        display_tanggal: item.tanggal_peminjaman
-          ? new Date(item.tanggal_peminjaman).toLocaleDateString("id-ID", {
+        tanggal_pinjam: dateObj ? dateObj.toISOString() : "", 
+        display_tanggal: dateObj
+          ? dateObj.toLocaleDateString("id-ID", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -86,9 +95,37 @@ export default function PinjamBarangClient({
         status: item.status_peminjaman,
         no_telepon: item.no_telepon,
         alamat: item.alamat || "",
-      })),
-    [data]
-  );
+      };
+    });
+  }, [data]);
+
+  const sortedData = useMemo(() => {
+    const sorted = [...formattedData];
+
+    return sorted.sort((a, b) => {
+      if (currentSort.includes("date")) {
+        const dateA = a.tanggal_pinjam ? new Date(a.tanggal_pinjam).getTime() : 0;
+        const dateB = b.tanggal_pinjam ? new Date(b.tanggal_pinjam).getTime() : 0;
+
+        if (currentSort === "date-desc") return dateB - dateA;
+        if (currentSort === "date-asc") return dateA - dateB;
+      }
+
+      if (currentSort === "status-asc") {
+        if (a.status === b.status) return 0;
+        return a.status === "Belum Dikembalikan" ? -1 : 1;
+      }
+
+      if (currentSort === "name-asc") {
+        return a.nama_peminjam.localeCompare(b.nama_peminjam);
+      }
+      if (currentSort === "name-desc") {
+        return b.nama_peminjam.localeCompare(a.nama_peminjam);
+      }
+
+      return 0;
+    });
+  }, [formattedData, currentSort]);
 
   const columns = useMemo<Column<PeminjamanUI>[]>(
     () => [
@@ -99,7 +136,21 @@ export default function PinjamBarangClient({
       },
       { header: "No. KTP", accessorKey: "nomor_ktp" },
       { header: "Peminjam", accessorKey: "nama_peminjam" },
-      { header: "Kategori", accessorKey: "kategori" },
+      {
+        header: "Kategori",
+        accessorKey: "kategori",
+        cell: (item) => (
+          <span
+            className={`text-xs font-bold px-2 py-1 rounded-full border ${
+              item.kategori === "Warga"
+                ? "bg-purple-50 text-purple-700 border-purple-200"
+                : "bg-indigo-50 text-indigo-700 border-indigo-200"
+            }`}
+          >
+            {item.kategori}
+          </span>
+        ),
+      },
       { header: "Barang", accessorKey: "nama_barang" },
       { header: "Tgl Pinjam", accessorKey: "display_tanggal" },
       { header: "Jml", accessorKey: "jumlah" },
@@ -129,10 +180,7 @@ export default function PinjamBarangClient({
                 nama_barang={item.nama_barang}
               />
             )}
-            
-            {/* Ganti tombol edit lama dengan tombol popup baru */}
-            <EditPeminjamanButton item={item} barangList={items} />
-
+            <EditPeminjamanButton item={item as any} barangList={items} />
             <DeletePeminjamanButton
               id={item.id}
               nama_peminjam={item.nama_peminjam}
@@ -149,10 +197,12 @@ export default function PinjamBarangClient({
     router.push("/admin/dashboard/pinjam-barang/tambah-peminjam");
   };
 
-  const sortOptions = [
-    { label: "Terbaru", value: "date-desc" },
-    { label: "Terlama", value: "date-asc" },
+  const sortOptionsList = [
+    { label: "Tanggal Terbaru", value: "date-desc" },
+    { label: "Tanggal Terlama", value: "date-asc" },
     { label: "Status", value: "status-asc" },
+    { label: "Nama (A-Z)", value: "name-asc" },
+    { label: "Nama (Z-A)", value: "name-desc" },
   ];
 
   return (
@@ -169,7 +219,6 @@ export default function PinjamBarangClient({
             </p>
           </div>
         </div>
-
         <button
           onClick={handleTambah}
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2 font-medium"
@@ -180,9 +229,9 @@ export default function PinjamBarangClient({
 
       <Table
         columns={columns}
-        data={uiData}
+        data={sortedData}
         title="Daftar Peminjaman"
-        sortOptions={sortOptions}
+        sortOptions={sortOptionsList}
         itemsPage={10}
         entryLabel="peminjaman"
         totalPages={totalPages}

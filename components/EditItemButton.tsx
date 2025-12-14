@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { updateItemAction } from "@/lib/action";
 import { useFormStatus } from "react-dom";
 import { FaEdit } from "react-icons/fa";
+import Toast from "@/components/toast";
 
 const SubmitButton = () => {
   const { pending } = useFormStatus();
@@ -33,15 +34,20 @@ export default function EditItemButton({ item }: EditItemProps) {
   const [isOpen, setIsOpen] = useState(false);
   const updateItemWithId = updateItemAction.bind(null, item.id_barang);
   const [state, formAction] = useActionState(updateItemWithId, null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     if (state?.success) {
-      setIsOpen(false);
+      setToast({ message: "Data barang berhasil diperbarui!", type: "success" });
+      setTimeout(() => setIsOpen(false), 1000);
+    } else if (state?.message) {
+      setToast({ message: state.message, type: "error" });
     }
-  }, [state?.success]);
+  }, [state]);
 
   return (
     <>
+    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <button
         onClick={() => setIsOpen(true)}
         className="bg-yellow-100 p-2 rounded text-yellow-600 hover:bg-yellow-200 transition-colors"
@@ -68,11 +74,6 @@ export default function EditItemButton({ item }: EditItemProps) {
             </div>
 
             <div className="p-6">
-              {state?.message && !state.success && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm border border-red-100">
-                  {state.message}
-                </div>
-              )}
 
               <form action={formAction} className="space-y-4">
                 <div>

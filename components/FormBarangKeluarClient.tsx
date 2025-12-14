@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useActionState } from "react";
+import React, { useActionState, useEffect, useState } from "react";
 import { FaCaretDown, FaDolly } from "react-icons/fa"; 
 import { useRouter } from "next/navigation";
 import { createBarangKeluar, State } from "@/actions/barangKeluar";
+import Toast from "@/components/toast";
 
 interface FormBarangKeluarClientProps {
   items: {
@@ -26,9 +27,25 @@ export default function FormBarangKeluarClient({
     createBarangKeluar,
     initialState
   );
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  useEffect(() => {
+      // Logic deteksi sukses/gagal yang agak beda karena Action ini return error object
+      if (state.message) {
+         // Jika pesan "Berhasil" (sesuaikan dengan return action Anda)
+         if (state.message.includes("Berhasil")) {
+             setToast({ message: state.message, type: "success" });
+             setTimeout(() => router.push("/admin/dashboard/barang-keluar"), 1000);
+         } else {
+             // Jika error general
+             setToast({ message: state.message, type: "error" });
+         }
+      }
+  }, [state, router]);
 
   return (
     <div className="w-full bg-white p-6 rounded-xl">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative w-8 h-8 text-[#1E88E5]">
           <FaDolly className="w-full h-full" />

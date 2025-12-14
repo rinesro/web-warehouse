@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { deletePeminjamanAction } from "@/lib/action";
 import { FaTrash } from "react-icons/fa";
+import Toast from "@/components/toast"; // Import Toast
 
 export default function DeletePeminjamanButton({
   id,
@@ -15,16 +16,35 @@ export default function DeletePeminjamanButton({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    await deletePeminjamanAction(id);
-    setIsDeleting(false);
-    setIsOpen(false);
+    try {
+      const result = await deletePeminjamanAction(id);
+      
+      // Kita cek result.success (asumsi action Anda mengembalikan object {success, message})
+      if (result && result.success) {
+        setToast({ message: "Data peminjaman berhasil dihapus!", type: "success" });
+        setTimeout(() => {
+          setIsOpen(false);
+        }, 1000);
+      } else {
+         // Fallback jika action return valuenya beda, tapi biasanya formatnya sama
+        setToast({ message: result?.message || "Gagal menghapus data!", type: "error" });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setToast({ message: "Terjadi kesalahan sistem.", type: "error" });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
     <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
       <button
         onClick={() => setIsOpen(true)}
         className="bg-red-100 p-2 rounded text-red-600 hover:bg-red-200 transition-colors"
@@ -43,7 +63,7 @@ export default function DeletePeminjamanButton({
               <h3 className="text-lg font-bold text-gray-900 mb-2">
                 Hapus Peminjaman?
               </h3>
-              <p className="text-gray-500 text-sm mb-6 break-words whitespace-normal">
+              <p className="text-gray-500 text-sm mb-6 wrap-break-words whitespace-normal">
                 Apakah Anda yakin ingin menghapus data peminjaman{" "}
                 <strong>{nama_peminjam}</strong> ({nama_barang})? Tindakan ini
                 tidak dapat dibatalkan.

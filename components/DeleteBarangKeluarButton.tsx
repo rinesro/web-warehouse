@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { deleteBarangKeluar } from "@/actions/barangKeluar";
 import { FaTrash } from "react-icons/fa";
+import Toast from "@/components/toast"; // Import Toast
 
 export default function DeleteBarangKeluarButton({
   id,
@@ -13,15 +14,21 @@ export default function DeleteBarangKeluarButton({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // State Toast
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
       await deleteBarangKeluar(id);
-      setIsOpen(false);
+      // Asumsi jika tidak throw error, berarti sukses
+      setToast({ message: "Data berhasil dihapus!", type: "success" });
+      setTimeout(() => {
+        setIsOpen(false);
+      }, 1000);
     } catch (error) {
       console.error("Failed to delete:", error);
-      alert("Gagal menghapus data");
+      setToast({ message: "Gagal menghapus data!", type: "error" });
     } finally {
       setIsDeleting(false);
     }
@@ -29,6 +36,8 @@ export default function DeleteBarangKeluarButton({
 
   return (
     <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
       <button
         onClick={() => setIsOpen(true)}
         className="bg-red-100 p-2 rounded text-red-600 hover:bg-red-200 transition-colors"

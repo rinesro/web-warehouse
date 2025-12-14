@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaTrash, FaExclamationTriangle } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { deleteBarangMasukAction } from "@/lib/action";
+import Toast from "@/components/toast"; // Import Toast
 
 interface DeleteBarangMasukButtonProps {
   id: number;
@@ -17,19 +18,23 @@ export default function DeleteBarangMasukButton({
 }: DeleteBarangMasukButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
       const result = await deleteBarangMasukAction(id);
       if (result.success) {
-        setIsOpen(false);
+        setToast({ message: "Data berhasil dihapus!", type: "success" });
+        setTimeout(() => {
+          setIsOpen(false);
+        }, 2000);
       } else {
-        alert(result.message);
+        setToast({ message: result.message || "Gagal menghapus!", type: "error" });
       }
     } catch (error) {
       console.error("Error deleting item:", error);
-      alert("Terjadi kesalahan saat menghapus data.");
+      setToast({ message: "Terjadi kesalahan sistem.", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -37,6 +42,8 @@ export default function DeleteBarangMasukButton({
 
   return (
     <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
       <button
         onClick={() => setIsOpen(true)}
         className="bg-red-100 p-2 rounded text-red-600 hover:bg-red-200 transition-colors"

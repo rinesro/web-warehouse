@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useActionState } from "react";
+import React, { useActionState, useState } from "react"; // Tambahkan useState
 import Image from "next/image";
 import { FaCaretDown } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { createItemAction } from "@/lib/action";
+import Toast from "@/components/toast"; 
 
 interface FormState {
   error?: {
@@ -26,15 +27,23 @@ export default function FormTambahBarang() {
     null
   );
 
-  // Redirect on success
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
   React.useEffect(() => {
     if (state?.success) {
-      router.push("/admin/dashboard/data-barang");
+      setToast({ message: state.message || "Barang berhasil ditambahkan!", type: "success" });
+      setTimeout(() => {
+        router.push("/admin/dashboard/data-barang");
+      }, 1000);
+    } else if (state?.message) {
+      setToast({ message: state.message, type: "error" });
     }
-  }, [state?.success, router]);
+  }, [state?.success, state?.message, router]);
 
   return (
     <div className="w-full bg-white p-6 rounded-xl">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative w-8 h-8">
@@ -73,7 +82,7 @@ export default function FormTambahBarang() {
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-black font-semibold">Opsi Periode</label>
-              <div className="flex gap-8 items-center h-[48px]">
+              <div className="flex gap-8 items-center h-12">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"

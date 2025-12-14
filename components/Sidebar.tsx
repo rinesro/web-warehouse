@@ -19,108 +19,108 @@ const Sidebar = ({
   user,
 }: SidebarProps) => {
   const pathname = usePathname();
-  const [openManajemen, setOpenManajemen] = useState(false);
-  const [openLaporan, setOpenLaporan] = useState(false);
-  const [activeMenu, setActiveMenu] = useState(""); // State penentu warna biru utama
+
+  const [openManajemen, setOpenManajemen] = useState(() => 
+    pathname.includes("/data-barang") || 
+    pathname.includes("/barang-masuk") || 
+    pathname.includes("/barang-keluar")
+  );
+
+  const [openLaporan, setOpenLaporan] = useState(() => 
+    pathname.includes("/laporan-stok") || 
+    pathname.includes("/laporan-barang-masuk") || 
+    pathname.includes("/laporan-barang-keluar")
+  );
+
   const [collapsed, setCollapsed] = useState(false);
-  const [activeSubMenu, setActiveSubMenu] = useState("");
+
+  const isDashboardActive = pathname === "/admin/dashboard";
+  
+  const isManajemenActive = 
+    pathname.includes("/data-barang") || 
+    pathname.includes("/barang-masuk") || 
+    pathname.includes("/barang-keluar");
+
+  const isPinjamActive = pathname.includes("/pinjam-barang");
+  const isAkunActive = pathname.includes("/manajemen-akun");
+  
+  const isLaporanActive = 
+    pathname.includes("/laporan-stok") || 
+    pathname.includes("/laporan-barang-masuk") || 
+    pathname.includes("/laporan-barang-keluar");
+
+  const activeSubMenu = pathname.includes("/data-barang") ? "data_barang"
+    : pathname.includes("/barang-masuk") ? "barang_masuk"
+    : pathname.includes("/barang-keluar") ? "barang_keluar"
+    : pathname.includes("/laporan-stok") ? "laporan_stok"
+    : pathname.includes("/laporan-barang-masuk") ? "Laporan_barang_masuk"
+    : pathname.includes("/laporan-barang-keluar") ? "laporan_barang_keluar"
+    : "";
 
   useEffect(() => {
-    if (pathname === "/admin/dashboard") {
-      setActiveMenu("dashboard");
-      setActiveSubMenu("");
-    } else if (pathname.includes("/data-barang")) {
-      setActiveMenu("manajemen");
-      setActiveSubMenu("data_barang");
-      setOpenManajemen(true); // Auto open jika refresh di halaman ini
-    } else if (pathname.includes("/barang-masuk")) {
-      setActiveMenu("manajemen");
-      setActiveSubMenu("barang_masuk");
-      setOpenManajemen(true);
-    } else if (pathname.includes("/barang-keluar")) {
-      setActiveMenu("manajemen");
-      setActiveSubMenu("barang_keluar");
-      setOpenManajemen(true);
-    } else if (pathname.includes("/pinjam-barang")) {
-      setActiveMenu("pinjam");
-      setActiveSubMenu("");
-    } else if (pathname.includes("/manajemen-akun")) {
-      setActiveMenu("manajemenAkun");
-      setActiveSubMenu("");
-    } else if (pathname.includes("/laporan-stok")) {
-      setActiveMenu("laporan");
-      setActiveSubMenu("laporan_stok");
-      setOpenLaporan(true);
-    } else if (pathname.includes("/laporan-barang-masuk")) {
-      setActiveMenu("laporan");
-      setActiveSubMenu("Laporan_barang_masuk");
-      setOpenLaporan(true);
-    } else if (pathname.includes("/laporan-barang-keluar")) {
-      setActiveMenu("laporan");
-      setActiveSubMenu("laporan_barang_keluar");
-      setOpenLaporan(true);
-    }
-  }, [pathname]);
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setCollapsed(false);
+      }
+    };
+    handleResize(); 
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const isManajemenActive = 
-    activeMenu === "manajemen" && 
-    ["data_barang", "barang_masuk", "barang_keluar"].includes(activeSubMenu);
-
-  const isLaporanActive = 
-    activeMenu === "laporan" && 
-    ["laporan_stok", "Laporan_barang_masuk", "laporan_barang_keluar"].includes(activeSubMenu);
-
-  type MenuType = "dashboard" | "manajemen" | "pinjam" | "manajemenAkun" | "laporan";
-
-  const baseClass = "py-4 px-4 cursor-pointer flex items-center gap-3 rounded-lg transition-all duration-300";
-  const inactiveClass = "text-gray-700 hover:bg-gray-100";
-  const activeClass = "bg-[#1E88E5] text-white shadow-lg";
-
+  const getBaseClass = (collapsed: boolean) => 
+    `group relative w-full py-3 flex items-center rounded-r-lg transition-all duration-200 select-none border-l-4
+     ${collapsed ? "justify-center px-2" : "justify-start px-4 gap-3"}`;
   
-  const handleSingleLinkClick = (menuName: MenuType) => {
-    setActiveMenu(menuName); 
-    setActiveSubMenu(""); 
-    if (collapsed) setCollapsed(false);
-    if (onMobileClose) onMobileClose();
+  const activeClass = "border-l-white bg-[#1E88E5] text-white shadow-md shadow-blue-200"; 
+  const openClass = "border-l-[#1E88E5] bg-blue-50 text-blue-700 font-semibold";
+  const inactiveClass = "border-l-transparent text-gray-600 hover:bg-gray-50 hover:text-blue-600 hover:border-l-[#1E88E5]";
+
+  const subMenuBaseClass = "w-full py-2.5 pl-10 pr-2 flex text-sm transition-all duration-200 rounded-r-lg cursor-pointer mb-1 border-l-4 border-transparent hover:border-l-blue-300 hover:bg-blue-50";
+  const subMenuActive = "bg-blue-100 text-blue-700 font-medium border-l-[#1E88E5]"; 
+  const subMenuInactive = "text-slate-500 hover:text-blue-600 font-normal";
+
+  const handleDirectClick = () => {
+    if (onMobileClose) onMobileClose(); 
   };
 
-  const toggleDropdown = (menuName: MenuType) => {
-    if (collapsed) setCollapsed(false);
-    
-    if (menuName === "manajemen") {
-      setOpenManajemen(!openManajemen);
-    } else if (menuName === "laporan") {
-      setOpenLaporan(!openLaporan);
-    }
+  const toggleManajemen = () => {
+    if (collapsed) setCollapsed(false); 
+    setOpenManajemen(!openManajemen);
+  };
+
+  const toggleLaporan = () => {
+    if (collapsed) setCollapsed(false); 
+    setOpenLaporan(!openLaporan);
+  };
+
+  const handleSubMenuClick = () => {
+    if (onMobileClose) onMobileClose();
   };
 
   return (
     <>
-      <div
+      <aside
         className={`
-            fixed inset-y-0 left-0 z-50 h-full bg-white shadow-2xl transition-transform duration-300 flex flex-col
+            fixed inset-y-0 left-0 z-50 h-full bg-white shadow-2xl transition-all duration-300 flex flex-col border-r border-gray-100
             md:static md:translate-x-0
             ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
             ${collapsed ? "md:w-20" : "md:w-72"}
             w-64
         `}
       >
-        {/* Header */}
-        <div className="h-20 flex items-center justify-between px-5 w-full bg-[#1E88E5] shadow-lg">
+        {/* --- HEADER --- */}
+        <div className="h-20 flex items-center justify-between px-4 w-full bg-[#1E88E5] shadow-sm shrink-0">
           {!collapsed && (
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-bold text-white truncate tracking-wide animate-fadeIn">
               Gudang Kelurahan
             </h2>
           )}
 
           <button
-            className="text-sm px-4 py-1 rounded text-white hidden md:block"
-            onClick={() => {
-              setCollapsed(!collapsed);
-              // Tutup semua dropdown saat collapse agar rapi
-              setOpenManajemen(false);
-              setOpenLaporan(false);
-            }}
+            onClick={() => setCollapsed(!collapsed)}
+            className={`text-white p-1 rounded-md hover:bg-white/20 transition-colors focus:outline-none hidden md:block
+              ${collapsed ? "mx-auto" : ""}`} 
           >
             <img
               src={collapsed ? "/three_dot_icon.png" : "/hamburger_icon.png"}
@@ -135,256 +135,190 @@ const Sidebar = ({
         </div>
 
         <div
-          className={`mt-4 mx-3 flex items-center gap-3 p-2 rounded transition-all duration-300 border-b-2 border-gray-300
-                ${collapsed ? "justify-center h-28" : "h-30"}`}
+          className={`flex items-center border-b-2 border-gray-300 shrink-0 bg-white transition-all duration-300
+                ${collapsed ? "justify-center py-4 px-2 h-20" : "gap-3 py-8 px-6 h-auto"}`}
         >
           <img
             src={collapsed ? "/logo_kelurahan_icon.png" : "/logo_kelurahan_expand.png"}
             alt="logo kelurahan"
-            className={` object-cover transition-all duration-300
-                ${collapsed ? "w-13 h-16" : ""}`}
+            className={`object-contain transition-all duration-300
+                ${collapsed ? "w-10 h-10" : "h-20 w-auto"}`}
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar">
+        {/* --- MENU ITEMS --- */}
+        <nav className="flex-1 overflow-y-auto py-6 px-3 custom-scrollbar space-y-2">
           
           {/* DASHBOARD */}
-          <Link href="/admin/dashboard">
+          <Link href="/admin/dashboard" className="block w-full">
             <div
-              onClick={() => handleSingleLinkClick("dashboard")}
-              className={`${baseClass} ${
-                activeMenu === "dashboard" ? activeClass : inactiveClass
-              } 
-                        ${collapsed ? "justify-center" : ""} mb-3 `}
+              onClick={handleDirectClick} 
+              className={`${getBaseClass(collapsed)} ${
+                isDashboardActive ? activeClass : inactiveClass
+              }`}
             >
               <img
-                src={activeMenu === "dashboard" ? "/dashboard_white_icon.png" : "/dashboard_icon.png"}
+                src={isDashboardActive ? "/dashboard_white_icon.png" : "/dashboard_icon.png"}
                 alt="dashboard"
-                className="w-5 h-5"
+                className={`shrink-0 ${collapsed ? "w-6 h-6" : "w-5 h-5"}`}
               />
-              {!collapsed && "Dashboard"}
+              
+              {!collapsed && <span className="font-medium whitespace-nowrap">Dashboard</span>}
             </div>
           </Link>
 
           {/* MANAJEMEN BARANG */}
-          <div
-            onClick={() => toggleDropdown("manajemen")} // Pakai fungsi baru yang aman
-            className={`${baseClass} 
-              ${
-                isManajemenActive
-                  ? activeClass // Biru Solid (Hanya jika anak aktif)
-                  : openManajemen
-                  ? "bg-gray-100 text-gray-900 font-semibold" // Abu-abu (Jika dibuka tapi dashboard masih aktif)
-                  : inactiveClass // Putih biasa
-              } 
-              ${collapsed ? "justify-center" : ""} mb-3 `}
-          >
-            <img
-              src={isManajemenActive ? "/barang_white_icon.png" : "/barang_icon.png"}
-              alt="manajemen barang"
-              className="w-5 h-5"
-            />
-            {!collapsed && "Manajemen Barang"}
-            {!collapsed && (
-              <img
-                src={isManajemenActive ? "/up_icon.png" : "/up_default_icon.png"}
-                className={`w-4 h-4 ml-auto transition-transform duration-300 ${
-                  openManajemen ? "rotate-0" : "rotate-180"
+          <div className="w-full">
+            <button
+              onClick={toggleManajemen} 
+              className={`${getBaseClass(collapsed)} w-full
+                ${
+                  isManajemenActive ? activeClass : 
+                  openManajemen ? openClass : 
+                  inactiveClass
                 }`}
-                alt="dropdown"
+            >
+              <img
+                src={isManajemenActive ? "/barang_white_icon.png" : "/barang_icon.png"}
+                alt="manajemen barang"
+                className={`shrink-0 ${collapsed ? "w-6 h-6" : "w-5 h-5"}`}
               />
+              
+              {!collapsed && (
+                <>
+                  <span className="flex-1 text-left font-medium whitespace-nowrap ml-3">Manajemen Barang</span>
+                  <img
+                    src={isManajemenActive ? "/up_icon.png" : "/up_default_icon.png"}
+                    className={`w-4 h-4 transition-transform duration-300 shrink-0 ${
+                       openManajemen ? "rotate-0" : "rotate-180"
+                    }`}
+                    alt="dropdown"
+                  />
+                </>
+              )}
+            </button>
+
+            {/* Submenu */}
+            {!collapsed && (
+              <div 
+                className={`overflow-hidden transition-all duration-300 ease-in-out
+                ${openManajemen ? "max-h-60 opacity-100 mt-1" : "max-h-0 opacity-0"}`}
+              >
+                <Link href="/admin/dashboard/data-barang">
+                  <div onClick={handleSubMenuClick} className={`${subMenuBaseClass} ${activeSubMenu === "data_barang" ? subMenuActive : subMenuInactive}`}>
+                    Data Barang
+                  </div>
+                </Link>
+                <Link href="/admin/dashboard/barang-masuk">
+                  <div onClick={handleSubMenuClick} className={`${subMenuBaseClass} ${activeSubMenu === "barang_masuk" ? subMenuActive : subMenuInactive}`}>
+                    Barang Masuk
+                  </div>
+                </Link>
+                <Link href="/admin/dashboard/barang-keluar">
+                  <div onClick={handleSubMenuClick} className={`${subMenuBaseClass} ${activeSubMenu === "barang_keluar" ? subMenuActive : subMenuInactive}`}>
+                    Barang Keluar
+                  </div>
+                </Link>
+              </div>
             )}
           </div>
 
-          {/* SUBMENU MANAJEMEN */}
-          {!collapsed && openManajemen && (
-            <div className="pl-12 space-y-2">
-              <Link href="/admin/dashboard/data-barang">
-                <div
-                  onClick={() => {
-                     // Saat klik anak, baru kita set active menu parentnya
-                    setActiveMenu("manajemen");
-                    setActiveSubMenu("data_barang");
-                    if (onMobileClose) onMobileClose();
-                  }}
-                  className={`p-2 flex text-sm transition-all duration-300 rounded cursor-pointer 
-                    ${
-                      activeSubMenu === "data_barang"
-                        ? "bg-gray-200 font-bold"
-                        : "hover:bg-gray-100"
-                    }`}
-                >
-                  <img src="/dot_default.png" className="my-auto mr-3" />
-                  Data Barang
-                </div>
-              </Link>
-              <Link href="/admin/dashboard/barang-masuk">
-                <div
-                  onClick={() => {
-                    setActiveMenu("manajemen");
-                    setActiveSubMenu("barang_masuk");
-                    if (onMobileClose) onMobileClose();
-                  }}
-                  className={`p-2 flex text-sm transition-all duration-300 rounded cursor-pointer 
-                    ${
-                      activeSubMenu === "barang_masuk"
-                        ? "bg-gray-200 font-bold"
-                        : "hover:bg-gray-100"
-                    }`}
-                >
-                  <img src="/dot_default.png" className="my-auto mr-3" />
-                  Barang Masuk
-                </div>
-              </Link>
-              <Link href="/admin/dashboard/barang-keluar">
-                <div
-                  onClick={() => {
-                    setActiveMenu("manajemen");
-                    setActiveSubMenu("barang_keluar");
-                    if (onMobileClose) onMobileClose();
-                  }}
-                  className={`p-2 flex text-sm transition-all duration-300 rounded cursor-pointer 
-                    ${
-                      activeSubMenu === "barang_keluar"
-                        ? "bg-gray-200 font-bold"
-                        : "hover:bg-gray-100"
-                    }`}
-                >
-                  <img src="/dot_default.png" className="my-auto mr-3" />
-                  Barang Keluar
-                </div>
-              </Link>
-            </div>
-          )}
-
           {/* PINJAM BARANG */}
-          <Link href="/admin/dashboard/pinjam-barang">
+          <Link href="/admin/dashboard/pinjam-barang" className="block w-full">
             <div
-              onClick={() => handleSingleLinkClick("pinjam")}
-              className={`${baseClass} ${
-                activeMenu === "pinjam" ? activeClass : inactiveClass
-              }
-                        ${collapsed ? "justify-center" : ""} mb-3 `}
+              onClick={handleDirectClick} 
+              className={`${getBaseClass(collapsed)} ${
+                isPinjamActive ? activeClass : inactiveClass
+              }`}
             >
               <img
-                src={activeMenu === "pinjam" ? "/pinjam_white_icon.png" : "/pinjam_icon.png"}
+                src={isPinjamActive ? "/pinjam_white_icon.png" : "/pinjam_icon.png"}
                 alt="pinjam barang"
-                className="w-5 h-5"
+                className={`shrink-0 ${collapsed ? "w-6 h-6" : "w-5 h-5"}`}
               />
-              {!collapsed && "Pinjam Barang"}
+              
+              {!collapsed && <span className="font-medium whitespace-nowrap">Pinjam Barang</span>}
             </div>
           </Link>
 
           {/* MANAJEMEN AKUN */}
           {user?.role === "admin" && (
-            <Link href="/admin/dashboard/manajemen-akun">
+            <Link href="/admin/dashboard/manajemen-akun" className="block w-full">
               <div
-                onClick={() => handleSingleLinkClick("manajemenAkun")}
-                className={`${baseClass} ${
-                  activeMenu === "manajemenAkun" ? activeClass : inactiveClass
-                } ${collapsed ? "justify-center" : ""}`}
+                onClick={handleDirectClick} 
+                className={`${getBaseClass(collapsed)} ${
+                  isAkunActive ? activeClass : inactiveClass
+                }`}
               >
                 <img
-                  src={activeMenu === "manajemenAkun" ? "/m_akun_white_icon.png" : "/m_akun_icon.png"}
+                  src={isAkunActive ? "/m_akun_white_icon.png" : "/m_akun_icon.png"}
                   alt="manajemen akun"
-                  className="w-5 h-5"
+                  className={`shrink-0 ${collapsed ? "w-6 h-6" : "w-5 h-5"}`}
                 />
-                {!collapsed && "Manajemen Akun"}
+                
+                {!collapsed && <span className="font-medium whitespace-nowrap">Manajemen Akun</span>}
               </div>
             </Link>
           )}
 
           {/* LAPORAN */}
-          <div
-            onClick={() => toggleDropdown("laporan")} // Pakai fungsi baru yang aman
-            className={`${baseClass}
-              ${
-                isLaporanActive
-                  ? activeClass
-                  : openLaporan
-                  ? "bg-gray-100 text-gray-900 font-semibold"
-                  : inactiveClass
-              }
-              ${collapsed ? "justify-center" : ""} mb-3 `}
-          >
-            <img
-              src={isLaporanActive ? "/laporan_white_icon.png" : "/laporan_icon.png"}
-              alt="laporan"
-              className="w-5 h-5"
-            />
-            {!collapsed && "Laporan"}
-            {!collapsed && (
-              <img
-                src={isLaporanActive ? "/up_icon.png" : "/up_default_icon.png"}
-                className={`w-4 h-4 ml-auto transition-transform duration-300 ${
-                  openLaporan ? "rotate-0" : "rotate-180"
+          <div className="w-full">
+            <button
+              onClick={toggleLaporan} 
+              className={`${getBaseClass(collapsed)} w-full
+                ${
+                  isLaporanActive ? activeClass :
+                  openLaporan ? openClass :
+                  inactiveClass
                 }`}
-                alt="dropdown"
+            >
+              <img
+                src={isLaporanActive ? "/laporan_white_icon.png" : "/laporan_icon.png"}
+                alt="laporan"
+                className={`shrink-0 ${collapsed ? "w-6 h-6" : "w-5 h-5"}`}
               />
+              
+              {!collapsed && (
+                <>
+                  <span className="flex-1 text-left font-medium whitespace-nowrap ml-3">Laporan</span>
+                  <img
+                    src={isLaporanActive ? "/up_icon.png" : "/up_default_icon.png"}
+                    className={`w-4 h-4 transition-transform duration-300 shrink-0 ${
+                       openLaporan ? "rotate-0" : "rotate-180"
+                    }`}
+                    alt="dropdown"
+                  />
+                </>
+              )}
+            </button>
+
+            {/* Submenu */}
+            {!collapsed && (
+              <div 
+                 className={`overflow-hidden transition-all duration-300 ease-in-out
+                 ${openLaporan ? "max-h-60 opacity-100 mt-1" : "max-h-0 opacity-0"}`}
+              >
+                <Link href="/admin/dashboard/laporan/laporan-stok">
+                  <div onClick={handleSubMenuClick} className={`${subMenuBaseClass} ${activeSubMenu === "laporan_stok" ? subMenuActive : subMenuInactive}`}>
+                    Laporan Stok
+                  </div>
+                </Link>
+                <Link href="/admin/dashboard/laporan/laporan-barang-masuk">
+                  <div onClick={handleSubMenuClick} className={`${subMenuBaseClass} ${activeSubMenu === "Laporan_barang_masuk" ? subMenuActive : subMenuInactive}`}>
+                    Laporan Barang Masuk
+                  </div>
+                </Link>
+                <Link href="/admin/dashboard/laporan/laporan-barang-keluar">
+                  <div onClick={handleSubMenuClick} className={`${subMenuBaseClass} ${activeSubMenu === "laporan_barang_keluar" ? subMenuActive : subMenuInactive}`}>
+                    Laporan Barang Keluar
+                  </div>
+                </Link>
+              </div>
             )}
           </div>
 
-          {/* SUBMENU LAPORAN */}
-          {!collapsed && openLaporan && (
-            <div className="pl-12 space-y-2">
-              <Link href="/admin/dashboard/laporan/laporan-stok">
-                <div
-                  onClick={() => {
-                    setActiveMenu("laporan");
-                    setActiveSubMenu("laporan_stok");
-                    if (onMobileClose) onMobileClose();
-                  }}
-                  className={`p-2 flex text-sm transition-all duration-300 rounded cursor-pointer 
-                    ${
-                      activeSubMenu === "laporan_stok"
-                        ? "bg-gray-200 font-bold"
-                        : "hover:bg-gray-100"
-                    }`}
-                >
-                  <img src="/dot_default.png" className="my-auto mr-3" />
-                  Laporan Stok
-                </div>
-              </Link>
-              <Link href="/admin/dashboard/laporan/laporan-barang-masuk">
-                <div
-                  onClick={() => {
-                    setActiveMenu("laporan");
-                    setActiveSubMenu("Laporan_barang_masuk");
-                    if (onMobileClose) onMobileClose();
-                  }}
-                  className={`p-2 flex text-sm transition-all duration-300 rounded cursor-pointer 
-                    ${
-                      activeSubMenu === "Laporan_barang_masuk"
-                        ? "bg-gray-200 font-bold"
-                        : "hover:bg-gray-100"
-                    }`}
-                >
-                  <img src="/dot_default.png" className="my-auto mr-3" />
-                  Laporan Barang Masuk
-                </div>
-              </Link>
-              <Link href="/admin/dashboard/laporan/laporan-barang-keluar">
-                <div
-                  onClick={() => {
-                    setActiveMenu("laporan");
-                    setActiveSubMenu("laporan_barang_keluar");
-                    if (onMobileClose) onMobileClose();
-                  }}
-                  className={`p-2 flex text-sm transition-all duration-300 rounded cursor-pointer 
-                    ${
-                      activeSubMenu === "laporan_barang_keluar"
-                        ? "bg-gray-200 font-bold"
-                        : "hover:bg-gray-100"
-                    }`}
-                >
-                  <img src="/dot_default.png" className="my-auto mr-3" />
-                  Laporan Barang Keluar
-                </div>
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
+        </nav>
+      </aside>
     </>
   );
 };

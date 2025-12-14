@@ -4,6 +4,7 @@ import { useState, useEffect, useActionState } from "react";
 import { updatePeminjaman, State } from "@/actions/peminjaman"; 
 import { useFormStatus } from "react-dom";
 import { FaEdit, FaCaretDown, FaHandshake } from "react-icons/fa";
+import Toast from "@/components/toast";
 
 interface PeminjamanData {
   id: number;
@@ -50,12 +51,18 @@ export default function EditPeminjamanButton({ item, barangList }: EditPeminjama
   const [isOpen, setIsOpen] = useState(false);
   const updateWithId = updatePeminjaman.bind(null, item.id);
   const [state, formAction] = useActionState(updateWithId, initialState);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
-    if (state?.success) {
-      setIsOpen(false);
+    if (state?.message) {
+      if (state.success) {
+        setToast({ message: "Data peminjaman berhasil diupdate!", type: "success" });
+        setTimeout(() => setIsOpen(false), 1000); 
+      } else {
+        setToast({ message: state.message, type: "error" });
+      }
     }
-  }, [state?.success]);
+  }, [state]);
 
   const formatDate = (dateString: string) => {
       try {
@@ -70,6 +77,13 @@ export default function EditPeminjamanButton({ item, barangList }: EditPeminjama
 
   return (
     <>
+    {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
       <button
         onClick={() => setIsOpen(true)}
         className="bg-yellow-100 p-2 rounded text-yellow-600 hover:bg-yellow-200 transition-colors"
@@ -95,11 +109,6 @@ export default function EditPeminjamanButton({ item, barangList }: EditPeminjama
             </div>
 
             <div className="p-6">
-              {state?.message && !state.success && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm border border-red-100">
-                  {state.message}
-                </div>
-              )}
 
               <form action={formAction} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -4,6 +4,7 @@ import { useState, useEffect, useActionState } from "react";
 import { updateBarangKeluar, State } from "@/actions/barangKeluar";
 import { useFormStatus } from "react-dom";
 import { FaEdit, FaCaretDown } from "react-icons/fa";
+import Toast from "@/components/toast";
 
 const SubmitButton = () => {
   const { pending } = useFormStatus();
@@ -45,15 +46,21 @@ export default function EditBarangKeluarButton({
   const [isOpen, setIsOpen] = useState(false);
   const updateWithId = updateBarangKeluar.bind(null, item.id_barang_keluar);
   const [state, formAction] = useActionState(updateWithId, initialState);
-
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  
   useEffect(() => {
-    if (state?.message === "Berhasil update") {
-      setIsOpen(false);
+    if (state?.message) {
+        if (state.message === "Berhasil update" || state.message.includes("Berhasil")) {
+            setToast({ message: "Data berhasil diperbarui!", type: "success" });
+            setTimeout(() => setIsOpen(false), 1000);
+        } else {
+            setToast({ message: state.message, type: "error" });
+        }
     }
   }, [state?.message]);
-
   return (
     <>
+    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <button
         onClick={() => setIsOpen(true)}
         className="bg-yellow-100 p-2 rounded text-yellow-600 hover:bg-yellow-200 transition-colors"
@@ -80,12 +87,6 @@ export default function EditBarangKeluarButton({
             </div>
 
             <div className="p-6">
-              {state?.message && state.message !== "Berhasil update" && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm border border-red-100">
-                  {state.message}
-                </div>
-              )}
-
               <form action={formAction} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Nama Barang */}

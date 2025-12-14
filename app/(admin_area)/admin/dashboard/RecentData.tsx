@@ -14,37 +14,46 @@ export default function RecentData({ data }: RecentDataProps) {
     },
     {
       header: "Nama Barang",
-      accessorKey: "data_barang" as const,
-      cell: (item: any) => item.data_barang?.nama_barang || "-",
+      accessorKey: "nama_barang" as const,
     },
     {
-      header: "Peminjam",
-      accessorKey: "nama_peminjam" as const,
-    },
-    {
-      header: "Tanggal Pinjam",
-      accessorKey: "tanggal_peminjaman" as const,
+      header: "Tanggal",
+      accessorKey: "tanggal" as const,
       cell: (item: any) =>
-        item.tanggal_peminjaman
-          ? new Date(item.tanggal_peminjaman).toLocaleDateString("id-ID", {
+        item.tanggal
+          ? new Date(item.tanggal).toLocaleDateString("id-ID", {
               day: "numeric",
-              month: "long",
+              month: "short",
               year: "numeric",
             })
           : "-",
     },
     {
-      header: "Status",
-      accessorKey: "status_peminjaman" as const,
+      header: "Aktivitas", 
+      accessorKey: "jenis" as const, 
       cell: (item: any) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            item.status_peminjaman === "Dikembalikan"
+          className={`px-3 py-1 rounded-full text-xs font-bold ${
+            item.jenis === "Masuk"
               ? "bg-green-100 text-green-700"
-              : "bg-orange-100 text-orange-700"
+              : "bg-red-100 text-red-700"
           }`}
         >
-          {item.status_peminjaman}
+          {item.jenis === "Masuk" ? "↓ Masuk" : "↑ Keluar"}
+        </span>
+      ),
+    },
+    {
+      header: "Jumlah", 
+      accessorKey: "jumlah" as const,
+      cell: (item: any) => <span className="font-medium">{item.jumlah}</span>,
+    },
+    {
+      header: "Keterangan", 
+      accessorKey: "keterangan" as const, 
+      cell: (item: any) => (
+        <span className="text-gray-500 text-xs truncate max-w-[150px] block" title={item.keterangan}>
+          {item.keterangan}
         </span>
       ),
     },
@@ -52,7 +61,7 @@ export default function RecentData({ data }: RecentDataProps) {
 
   return (
     <DashboardTable
-      title="Recent Data"
+      title="Recent data barang" 
       icon="/recent_logo.png"
       columns={columns}
       data={data}
@@ -61,8 +70,8 @@ export default function RecentData({ data }: RecentDataProps) {
         month: "long",
         year: "numeric",
       })}`}
-      filterKey="status_peminjaman"
-      filterOptions={["Dipinjam", "Dikembalikan"]}
+      filterKey="jenis"
+      filterOptions={["Masuk", "Keluar"]}
     />
   );
 }

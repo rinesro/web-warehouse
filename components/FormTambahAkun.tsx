@@ -8,6 +8,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import { FaUserPlus, FaCaretDown } from "react-icons/fa";
 import { createUserAction } from "@/lib/action";
+import Toast from "@/components/toast";
 
 const initialState = {
   message: "",
@@ -21,15 +22,15 @@ export default function FormTambahAkun() {
     initialState
   );
   const [isPendingTransition, startTransition] = useTransition();
-
+  const [toast, setToast] = React.useState<{ message: string; type: "success" | "error" } | null>(null);
   const isPending = isPendingAction || isPendingTransition;
 
   useEffect(() => {
     if (state.success) {
-      alert(state.message);
-      router.push("/admin/dashboard/manajemen-akun");
+      setToast({ message: state.message || "Akun berhasil dibuat!", type: "success" });
+      setTimeout(() => router.push("/admin/dashboard/manajemen-akun"), 1000);
     } else if (state.message) {
-      alert(state.message);
+      setToast({ message: state.message, type: "error" });
     }
   }, [state, router]);
 
@@ -41,6 +42,7 @@ export default function FormTambahAkun() {
 
   return (
     <div className="w-full bg-white p-6 rounded-xl">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative w-8 h-8 text-[#1E88E5]">
           <FaUserPlus className="w-full h-full" />
@@ -59,11 +61,6 @@ export default function FormTambahAkun() {
           }}
           className="flex flex-col"
         >
-          {state.message && !state.success && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6">
-              <span className="block sm:inline">{state.message}</span>
-            </div>
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 items-start">
             <div className="flex flex-col gap-2">

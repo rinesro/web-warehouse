@@ -7,6 +7,7 @@ import { FaUserPlus, FaUsersCog, FaTrash } from "react-icons/fa";
 import DeleteModal from "@/components/DeleteModal";
 import { deleteUser } from "@/actions/user";
 import EditAkunButton from "./EditAkunButton"; 
+import Toast from "@/components/toast"; 
 
 export interface User {
   id: string;
@@ -33,6 +34,8 @@ export default function ManajemenAkunClient({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
   const columns: Column<User>[] = [
     {
       header: "No",
@@ -83,8 +86,6 @@ export default function ManajemenAkunClient({
     router.push("/admin/dashboard/manajemen-akun/add");
   };
 
-  
-
   const onClickDeleteIcon = (user: User) => {
     setSelectedUser(user);
     setIsDeleteOpen(true);
@@ -99,23 +100,27 @@ export default function ManajemenAkunClient({
       const result = await deleteUser(selectedUser.id);
 
       if (result.success) {
-        alert(result.message);
+        setToast({ message: "Akun berhasil dihapus!", type: "success" });
+        setIsDeleteOpen(false); 
         router.refresh(); 
       } else {
-        alert(result.message);
+        setToast({ message: result.message || "Gagal menghapus akun!", type: "error" });
+        setIsDeleteOpen(false);
       }
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("Terjadi kesalahan saat menghapus user");
+      setToast({ message: "Terjadi kesalahan sistem.", type: "error" });
+      setIsDeleteOpen(false);
     } finally {
       setIsDeleting(false);
-      setIsDeleteOpen(false);
       setSelectedUser(null);
     }
   };
 
   return (
     <div className="space-y-6">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
       <div className="bg-white p-6 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.05)] border border-blue-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-200">

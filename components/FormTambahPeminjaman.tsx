@@ -4,6 +4,7 @@ import React, { useActionState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaHandshake, FaCaretDown } from "react-icons/fa";
 import { createPeminjamanAction } from "@/lib/action";
+import Toast from "@/components/toast";
 
 interface FormTambahPeminjamanProps {
   barangList: {
@@ -11,6 +12,18 @@ interface FormTambahPeminjamanProps {
     nama_barang: string;
     stok_barang: number;
   }[];
+  initialData?: {
+    id_peminjaman: number;
+    nomor_ktp: string;
+    nama_peminjam: string;
+    kategori_peminjam: string;
+    no_telepon: string;
+    alamat: string;
+    id_barang: number;
+    jumlah_peminjaman: number;
+    tanggal_peminjaman: string | Date | null;
+  };
+  isEdit?: boolean;
 }
 
 const initialState = {
@@ -20,36 +33,54 @@ const initialState = {
 
 export default function FormTambahPeminjaman({
   barangList,
+  initialData, 
+  isEdit = false, 
 }: FormTambahPeminjamanProps) {
   const router = useRouter();
   const [state, formAction, isPendingAction] = useActionState(
-    createPeminjamanAction,
+    createPeminjamanAction, 
     initialState
   );
+  const [toast, setToast] = React.useState<{ message: string; type: "success" | "error" } | null>(null);
   const [isPendingTransition, startTransition] = useTransition();
-
   const isPending = isPendingAction || isPendingTransition;
 
   useEffect(() => {
-    if (state.success) {
-      alert("Peminjaman berhasil dicatat!");
-      router.push("/admin/dashboard/pinjam-barang");
+    if (state?.success) {
+      setToast({ message: "Barang berhasil ditambahkan!", type: "success" });
+      setTimeout(() => router.push("/admin/dashboard/pinjam-barang"), 1000);
+    } else if (state?.message) {
+      setToast({ message: state.message, type: "error" });
     }
-  }, [state, router]);
+  }, [state?.success, state?.message, router]);
 
   const handleSubmit = (formData: FormData) => {
+    if (isEdit && initialData) {
+        formData.append("id_peminjaman", initialData.id_peminjaman.toString());
+    }
+    
     startTransition(() => {
       formAction(formData);
     });
   };
 
+  const getDefaultDate = () => {
+    if (initialData?.tanggal_peminjaman) {
+        return new Date(initialData.tanggal_peminjaman).toISOString().split("T")[0];
+    }
+    return new Date().toISOString().split("T")[0];
+  }
+
   return (
     <div className="w-full bg-white p-6 rounded-xl">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative w-8 h-8 text-[#1E88E5]">
           <FaHandshake className="w-full h-full" />
         </div>
-        <h1 className="text-black text-2xl font-bold">Form Peminjaman Barang</h1>
+        <h1 className="text-black text-2xl font-bold">
+          {isEdit ? "Edit Peminjaman Barang" : "Form Peminjaman Barang"}
+        </h1>
       </div>
 
       <div className="w-full h-2 bg-[#BBDEFB] rounded-full mb-8"></div>
@@ -74,13 +105,22 @@ export default function FormTambahPeminjaman({
             <div className="flex flex-col gap-2">
               <label className="text-black font-semibold">Nomor KTP (NIK)</label>
               <input
-                type="text"
+                type="text" 
+                inputMode="numeric" 
                 name="nomor_ktp"
                 placeholder="16 Digit NIK"
-                maxLength={16}
-                pattern="\d{16}"
+                maxLength={16} 
+                minLength={16} 
+                pattern="\d*"  
                 required
+                defaultValue={initialData?.nomor_ktp || ""}
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white"
+                
+                onInput={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  target.value = target.value.replace(/\D/g, "");
+                  if (target.value.length > 16) target.value = target.value.slice(0, 16);
+                }}
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -90,6 +130,7 @@ export default function FormTambahPeminjaman({
                 name="nama_peminjam"
                 placeholder="Contoh: Budi Santoso"
                 required
+                defaultValue={initialData?.nama_peminjam || ""}
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white"
               />
             </div>
@@ -104,7 +145,7 @@ export default function FormTambahPeminjaman({
                 <select
                   name="kategori_peminjam"
                   required
-                  defaultValue="Warga"
+                  defaultValue={initialData?.kategori_peminjam || "Warga"}
                   className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 appearance-none bg-white cursor-pointer"
                 >
                   <option value="Warga">Warga</option>
@@ -122,6 +163,7 @@ export default function FormTambahPeminjaman({
                 name="no_telp"
                 placeholder="0812xxxx"
                 required
+                defaultValue={initialData?.no_telepon || ""}
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white"
               />
             </div>
@@ -136,6 +178,7 @@ export default function FormTambahPeminjaman({
               name="alamat"
               placeholder="Masukkan alamat lengkap..."
               required
+              defaultValue={initialData?.alamat || ""}
               className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white"
             />
           </div>
@@ -149,7 +192,7 @@ export default function FormTambahPeminjaman({
                 <select
                   name="barang_id"
                   required
-                  defaultValue=""
+                  defaultValue={initialData?.id_barang || ""}
                   className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 appearance-none bg-white cursor-pointer"
                 >
                   <option value="" disabled>-- Pilih Barang Inventaris --</option>
@@ -176,6 +219,7 @@ export default function FormTambahPeminjaman({
                 placeholder="0"
                 min="1"
                 required
+                defaultValue={initialData?.jumlah_peminjaman || ""}
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white"
               />
             </div>
@@ -188,7 +232,7 @@ export default function FormTambahPeminjaman({
                 type="date"
                 name="tanggal_pinjam"
                 required
-                defaultValue={new Date().toISOString().split("T")[0]}
+                defaultValue={getDefaultDate()}
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white cursor-pointer"
                 onClick={(e) => (e.target as HTMLInputElement).showPicker()}
               />
@@ -203,7 +247,7 @@ export default function FormTambahPeminjaman({
               disabled={isPending}
               className="bg-white text-[#4285F4] font-bold py-2 px-8 rounded-xl shadow hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? "Menyimpan..." : "Simpan Data"}
+              {isPending ? "Menyimpan..." : (isEdit ? "Update Data" : "Simpan Data")}
             </button>
             <button
               type="button"

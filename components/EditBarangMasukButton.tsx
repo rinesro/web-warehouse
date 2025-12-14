@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { FaEdit, FaTimes } from "react-icons/fa";
 import { updateBarangMasukAction } from "@/lib/action";
-
+import Toast from "@/components/toast";
 interface EditBarangMasukButtonProps {
   id: number;
   nama_barang: string;
@@ -18,24 +18,23 @@ export default function EditBarangMasukButton({
   const [isOpen, setIsOpen] = useState(false);
   const [jumlah, setJumlah] = useState(jumlah_awal);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     const formData = new FormData();
     formData.append("jumlah_barang", jumlah.toString());
 
     try {
       const result = await updateBarangMasukAction(id, null, formData);
       if (result.success) {
-        setIsOpen(false);
+        setToast({ message: "Data berhasil diupdate!", type: "success" }); 
+        setTimeout(() => setIsOpen(false), 1000);
       } else {
-        alert(result.message);
+        setToast({ message: result.message || "Gagal update!", type: "error" }); 
       }
     } catch (error) {
-      console.error("Error updating item:", error);
-      alert("Terjadi kesalahan saat mengupdate data.");
+      setToast({ message: "Terjadi kesalahan sistem.", type: "error" }); 
     } finally {
       setIsLoading(false);
     }
@@ -43,6 +42,7 @@ export default function EditBarangMasukButton({
 
   return (
     <>
+    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <button
         onClick={() => setIsOpen(true)}
         className="bg-yellow-100 p-2 rounded text-yellow-600 hover:bg-yellow-200 transition-colors"

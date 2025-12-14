@@ -166,27 +166,33 @@ export const updateItemAction = async (
 
 export const deleteItemAction = async (id_barang: number) => {
   try {
-    await prisma.data_barang.delete({
-      where: { id_barang },
+    await prisma.$transaction(async (tx) => {
+      await tx.data_barang_masuk.deleteMany({
+        where: { id_barang },
+      });
+
+      await tx.data_barang_keluar.deleteMany({
+        where: { id_barang },
+      });
+
+      await tx.peminjaman.deleteMany({
+        where: { id_barang },
+      });
+      await tx.data_barang.delete({
+        where: { id_barang },
+      });
     });
+
+    revalidatePath("/admin/dashboard/data-barang");
+    return { message: "Barang beserta seluruh riwayatnya berhasil dihapus!", success: true };
   } catch (error: any) {
-    if (error.code === "P2003") {
-      return {
-        message:
-          "Tidak bisa menghapus barang! barang masih digunakan di riwayat transaksi!",
-        success: false,
-      };
-    }
+    console.error("Error deleting item:", error);
     return {
-      message: "Gagal menghapus barang!",
+      message: "Gagal menghapus barang! Terjadi kesalahan sistem.",
       success: false,
     };
   }
-
-  revalidatePath("/admin/dashboard/data-barang");
-  return { message: "Barang berhasil dihapus!", success: true };
 };
-
 export const addStockAction = async (
   prevState: unknown,
   formData: FormData
@@ -357,6 +363,14 @@ export const createPeminjamanAction = async (
           },
         },
       });
+      await tx.data_barang_keluar.create({
+        data: {
+          id_barang: barangIdInt,
+          jumlah_keluar: jumlahInt,
+          tanggal_keluar: new Date(tanggal_pinjam),
+          keterangan: `Dipinjam oleh ${nama_peminjam} (${kategori_peminjam})`,
+        },
+      });
     });
   } catch (error) {
     console.error("Error creating peminjaman:", error);
@@ -365,6 +379,7 @@ export const createPeminjamanAction = async (
 
   revalidatePath("/admin/dashboard/pinjam-barang");
   revalidatePath("/admin/dashboard/data-barang");
+  revalidatePath("/admin/dashboard/barang-keluar");
   return { message: "Peminjaman berhasil dibuat!", success: true };
 };
 
@@ -406,6 +421,14 @@ export const returnPeminjamanAction = async (id_peminjaman: number) => {
           },
         },
       });
+      await tx.data_barang_masuk.create({
+        data: {
+          id_barang: peminjaman.id_barang,
+          jumlah_barang: peminjaman.jumlah_peminjaman,
+          tanggal_masuk: new Date(), // Tanggal hari ini
+          sumber_barang: `Pengembalian barang oleh ${peminjaman.nama_peminjam}`,
+        },
+      });
     });
   } catch (error) {
     console.error("Error returning peminjaman:", error);
@@ -414,6 +437,7 @@ export const returnPeminjamanAction = async (id_peminjaman: number) => {
 
   revalidatePath("/admin/dashboard/pinjam-barang");
   revalidatePath("/admin/dashboard/data-barang");
+  revalidatePath("/admin/dashboard/barang-masuk");
   return { message: "Barang berhasil dikembalikan!", success: true };
 };
 
@@ -499,18 +523,16 @@ export const deleteBarangMasukAction = async (id_barang_masuk: number) => {
     if (!barang || barang.stok_barang < barangMasuk.jumlah_barang) {
       return {
         message:
-          "Gagal hapus! Stok di gudang tidak mencukupi (sudah terpakai).",
+          "Gagal hapus! harap hapus dihalaman data barang ( jika data barang ingin dihapus).",
         success: false,
       };
     }
 
     await prisma.$transaction(async (tx) => {
-      // Delete Barang Masuk
       await tx.data_barang_masuk.delete({
         where: { id_barang_masuk },
       });
 
-      // Reduce Stock
       await tx.data_barang.update({
         where: { id_barang: barangMasuk.id_barang },
         data: {

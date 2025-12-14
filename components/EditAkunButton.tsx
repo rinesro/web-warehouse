@@ -4,6 +4,7 @@ import { useState, useEffect, useActionState } from "react";
 import { updateUserAction } from "@/lib/action"; // Pastikan import action ini benar
 import { useFormStatus } from "react-dom";
 import { FaEdit, FaCaretDown, FaUserEdit } from "react-icons/fa";
+import Toast from "@/components/toast";
 
 // Interface untuk data User
 interface User {
@@ -39,15 +40,23 @@ const SubmitButton = () => {
 export default function EditAkunButton({ user }: EditAkunButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [state, formAction] = useActionState(updateUserAction, initialState);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
-    if (state?.success) {
-      setIsOpen(false);
+    if (state?.message) {
+      if (state.success) {
+         setToast({ message: "Data akun berhasil diperbarui!", type: "success" });
+         setTimeout(() => setIsOpen(false), 1000);
+      } else {
+         setToast({ message: state.message, type: "error" });
+      }
     }
-  }, [state?.success]);
+  }, [state]);
+
 
   return (
     <>
+    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <button
         onClick={() => setIsOpen(true)}
         className="bg-yellow-100 p-2 rounded text-yellow-600 hover:bg-yellow-200 transition-colors"
@@ -74,11 +83,6 @@ export default function EditAkunButton({ user }: EditAkunButtonProps) {
             </div>
 
             <div className="p-6">
-              {state?.message && !state.success && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm border border-red-100">
-                  {state.message}
-                </div>
-              )}
 
               <form action={formAction} className="space-y-4">
                 <input type="hidden" name="id" value={user.id} />
