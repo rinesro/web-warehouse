@@ -5,7 +5,7 @@ import Image from "next/image";
 import { FaCaretDown } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { addStockAction } from "@/lib/action";
-import Toast from "@/components/toast";
+import { triggerToast } from "@/utils/toastEvent";
 
 interface Item {
   id_barang: number;
@@ -33,7 +33,7 @@ export default function FormTambahStok({ items }: { items: Item[] }) {
     ) => Promise<FormState>,
     null
   );
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
 
   const handleItemChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = Number(e.target.value);
@@ -41,19 +41,18 @@ export default function FormTambahStok({ items }: { items: Item[] }) {
     setSelectedItem(item || null);
   };
 
-  // Redirect on success
   React.useEffect(() => {
     if (state?.success) {
-      setToast({ message: state.message || "Stok berhasil ditambahkan!", type: "success" });
-      setTimeout(() => router.push("/admin/dashboard/barang-masuk"), 1000);
+      triggerToast(state.message || "Barang berhasil ditambahkan!", "success");
+      router.push("/admin/dashboard/data-barang");
+      
     } else if (state?.message) {
-      setToast({ message: state.message, type: "error" });
+      triggerToast(state.message, "error");
     }
   }, [state?.success, state?.message, router]);
   
   return (
     <div className="w-full bg-white p-6 rounded-xl">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative w-8 h-8">

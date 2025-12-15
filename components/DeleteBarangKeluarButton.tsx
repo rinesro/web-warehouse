@@ -25,7 +25,7 @@ export default function DeleteBarangKeluarButton({
       setToast({ message: "Data berhasil dihapus!", type: "success" });
       setTimeout(() => {
         setIsOpen(false);
-      }, 1000);
+      }, 100);
     } catch (error) {
       console.error("Failed to delete:", error);
       setToast({ message: "Gagal menghapus data!", type: "error" });

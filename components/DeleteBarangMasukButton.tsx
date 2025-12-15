@@ -28,7 +28,7 @@ export default function DeleteBarangMasukButton({
         setToast({ message: "Data berhasil dihapus!", type: "success" });
         setTimeout(() => {
           setIsOpen(false);
-        }, 2000);
+        }, 100);
       } else {
         setToast({ message: result.message || "Gagal menghapus!", type: "error" });
       }

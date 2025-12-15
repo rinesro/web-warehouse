@@ -4,7 +4,7 @@ import React, { useActionState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaHandshake, FaCaretDown } from "react-icons/fa";
 import { createPeminjamanAction } from "@/lib/action";
-import Toast from "@/components/toast";
+import { triggerToast } from "@/utils/toastEvent";
 
 interface FormTambahPeminjamanProps {
   barangList: {
@@ -41,18 +41,17 @@ export default function FormTambahPeminjaman({
     createPeminjamanAction, 
     initialState
   );
-  const [toast, setToast] = React.useState<{ message: string; type: "success" | "error" } | null>(null);
   const [isPendingTransition, startTransition] = useTransition();
   const isPending = isPendingAction || isPendingTransition;
 
   useEffect(() => {
     if (state?.success) {
-      setToast({ message: "Barang berhasil ditambahkan!", type: "success" });
-      setTimeout(() => router.push("/admin/dashboard/pinjam-barang"), 1000);
+      triggerToast("Peminjaman berhasil disimpan!", "success");
+      router.push("/admin/dashboard/pinjam-barang");
     } else if (state?.message) {
-      setToast({ message: state.message, type: "error" });
+      triggerToast(state.message, "error");
     }
-  }, [state?.success, state?.message, router]);
+  }, [state, router]);
 
   const handleSubmit = (formData: FormData) => {
     if (isEdit && initialData) {
@@ -73,7 +72,6 @@ export default function FormTambahPeminjaman({
 
   return (
     <div className="w-full bg-white p-6 rounded-xl">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative w-8 h-8 text-[#1E88E5]">
           <FaHandshake className="w-full h-full" />

@@ -57,7 +57,7 @@ export default function EditPeminjamanButton({ item, barangList }: EditPeminjama
     if (state?.message) {
       if (state.success) {
         setToast({ message: "Data peminjaman berhasil diupdate!", type: "success" });
-        setTimeout(() => setIsOpen(false), 1000); 
+        setTimeout(() => setIsOpen(false), 100); 
       } else {
         setToast({ message: state.message, type: "error" });
       }

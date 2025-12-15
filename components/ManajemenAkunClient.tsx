@@ -156,7 +156,7 @@ export default function ManajemenAkunClient({
           { label: "Terbaru", value: "createdAt-desc" }, 
           { label: "Nama (A-Z)", value: "name-asc" },    
           { label: "Nama (Z-A)", value: "name-desc" },   
-          { label: "Role (A-Z)", value: "role-asc" },    
+          { label: "Role (desc)", value: "role-asc" },    
           { label: "Email (A-Z)", value: "email-asc" },  
         ]}
       />

@@ -1,12 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import Toast from "./toast"; // Import komponen Toast UI anda yang lama
+// PENTING: Import tampilan Toast lama Anda, beri alias ToastUI agar tidak bingung
+import ToastUI from "@/components/toast"; 
 
 type ToastType = "success" | "error";
 
 interface ToastContextType {
-  showToast: (message: string, type: "success" | "error") => void;
+  showToast: (message: string, type: ToastType) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -15,7 +16,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toastData, setToastData] = useState<{
     message: string;
     type: ToastType;
-    key: number; // Key unik untuk mereset timer toast
+    key: number; // Key unik untuk mereset timer animasi
   } | null>(null);
 
   const showToast = (message: string, type: ToastType) => {
@@ -25,9 +26,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
+      {/* Render UI Toast di sini, di level paling atas aplikasi */}
       {toastData && (
-        <Toast
-          key={toastData.key} // Memaksa re-render agar animasi ulang
+        <ToastUI
+          key={toastData.key}
           message={toastData.message}
           type={toastData.type}
           onClose={() => setToastData(null)}
@@ -37,6 +39,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Hook kustom untuk memanggil toast dari mana saja
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {

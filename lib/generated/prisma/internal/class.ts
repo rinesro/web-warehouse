@@ -23,7 +23,7 @@ const config: runtime.GetPrismaClientConfig = {
       "value": "prisma-client"
     },
     "output": {
-      "value": "C:\\New folder (2)\\gudang_kelurahan_pppl\\lib\\generated\\prisma",
+      "value": "C:\\test_ha\\gudang_kelurahan_pppl\\lib\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -41,7 +41,7 @@ const config: runtime.GetPrismaClientConfig = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\New folder (2)\\gudang_kelurahan_pppl\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\test_ha\\gudang_kelurahan_pppl\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativePath": "../../../prisma",

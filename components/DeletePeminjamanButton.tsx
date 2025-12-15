@@ -28,7 +28,7 @@ export default function DeletePeminjamanButton({
         setToast({ message: "Data peminjaman berhasil dihapus!", type: "success" });
         setTimeout(() => {
           setIsOpen(false);
-        }, 1000);
+        }, 100);
       } else {
          // Fallback jika action return valuenya beda, tapi biasanya formatnya sama
         setToast({ message: result?.message || "Gagal menghapus data!", type: "error" });

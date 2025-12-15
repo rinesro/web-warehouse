@@ -39,7 +39,7 @@ export default function EditItemButton({ item }: EditItemProps) {
   useEffect(() => {
     if (state?.success) {
       setToast({ message: "Data barang berhasil diperbarui!", type: "success" });
-      setTimeout(() => setIsOpen(false), 1000);
+      setTimeout(() => setIsOpen(false), 100);
     } else if (state?.message) {
       setToast({ message: state.message, type: "error" });
     }

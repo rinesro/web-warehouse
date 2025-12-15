@@ -26,7 +26,7 @@ export default function DeleteItemButton({
         setToast({ message: "Barang berhasil dihapus!", type: "success" });
         setTimeout(() => {
           setIsOpen(false);
-        }, 1000);
+        }, 100);
       } else {
         setToast({ message: result?.message || "Gagal menghapus barang!", type: "error" });
       }

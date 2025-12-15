@@ -46,7 +46,7 @@ export default function EditAkunButton({ user }: EditAkunButtonProps) {
     if (state?.message) {
       if (state.success) {
          setToast({ message: "Data akun berhasil diperbarui!", type: "success" });
-         setTimeout(() => setIsOpen(false), 1000);
+         setTimeout(() => setIsOpen(false), 100);
       } else {
          setToast({ message: state.message, type: "error" });
       }

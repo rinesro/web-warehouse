@@ -52,7 +52,7 @@ export default function EditBarangKeluarButton({
     if (state?.message) {
         if (state.message === "Berhasil update" || state.message.includes("Berhasil")) {
             setToast({ message: "Data berhasil diperbarui!", type: "success" });
-            setTimeout(() => setIsOpen(false), 1000);
+            setTimeout(() => setIsOpen(false), 100);
         } else {
             setToast({ message: state.message, type: "error" });
         }

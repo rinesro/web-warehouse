@@ -29,7 +29,7 @@ export default function EditBarangMasukButton({
       const result = await updateBarangMasukAction(id, null, formData);
       if (result.success) {
         setToast({ message: "Data berhasil diupdate!", type: "success" }); 
-        setTimeout(() => setIsOpen(false), 1000);
+        setTimeout(() => setIsOpen(false), 100);
       } else {
         setToast({ message: result.message || "Gagal update!", type: "error" }); 
       }
