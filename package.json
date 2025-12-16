@@ -6,8 +6,16 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "postinstall": "prisma generate"
+    "lint": "next lint", 
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy"
   },
+
+  "engines": {
+    "node": ">=20.0.0"
+  },
+
   "dependencies": {
     "@auth/pg-adapter": "^1.11.1",
     "@auth/prisma-adapter": "^2.11.1",
