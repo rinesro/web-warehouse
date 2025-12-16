@@ -8,6 +8,16 @@ import {
 
 import { fetchAllBarang } from "@/data/barang";
 
+interface BarangKeluar {
+    id: number;
+    tanggal_keluar: Date; 
+    jumlah_keluar: number;
+    barang: {
+        nama_barang: string;
+        satuan_barang: string;
+    };
+    nama_penerima: string;
+}
 const BarangKeluarPage = async ({
   searchParams,
 }: {
@@ -24,11 +34,13 @@ const BarangKeluarPage = async ({
   const items = await fetchAllBarang();
 
   // Serialize data
-  const data = rawData.map((item) => ({
-    ...item,
-    tanggal_keluar: item.tanggal_keluar.toISOString(),
-    createdAt: item.createdAt.toISOString(),
-    updatedAt: item.updatedAt.toISOString(),
+  const data = recentKeluar.map((item: BarangKeluar) => ({ 
+    id: item.id,
+    tanggal: item.tanggal_keluar.toISOString(),
+    nama_barang: item.barang.nama_barang,
+    jumlah: item.jumlah_keluar,
+    satuan: item.barang.satuan_barang,
+    penerima: item.nama_penerima,
   }));
 
   return (
