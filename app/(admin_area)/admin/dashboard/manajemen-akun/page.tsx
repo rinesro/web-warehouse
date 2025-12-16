@@ -1,8 +1,9 @@
 import React from "react";
-import db from "@/lib/db"; 
+import { prisma } from "@/lib/prisma"; // Kita pakai ini
 import ManajemenAkunClient from "@/components/ManajemenAkunClient";
 
-type UserFindManyArgs = Parameters<typeof db.user.findMany>[0];
+// PERBAIKAN 1: Ganti 'db' jadi 'prisma'
+type UserFindManyArgs = Parameters<typeof prisma.user.findMany>[0];
 type UserOrderBy = NonNullable<UserFindManyArgs>["orderBy"];
 type UserWhere = NonNullable<UserFindManyArgs>["where"];
 
@@ -44,7 +45,6 @@ export default async function ManajemenAkunPage({
       break;
   }
 
-  
   const whereClause: UserWhere = {
     OR: [
       { name: { contains: query, mode: "insensitive" } },
@@ -52,15 +52,16 @@ export default async function ManajemenAkunPage({
     ],
   };
 
-  const users = await db.user.findMany({
+  // PERBAIKAN 2: Ganti 'db' jadi 'prisma'
+  const users = await prisma.user.findMany({
     where: whereClause,
     orderBy: orderBy,
     take: itemsPerPage,
     skip: (page - 1) * itemsPerPage,
   });
-
   
-  const totalItems = await db.user.count({
+  // PERBAIKAN 3: Ganti 'db' jadi 'prisma'
+  const totalItems = await prisma.user.count({
     where: whereClause,
   });
 

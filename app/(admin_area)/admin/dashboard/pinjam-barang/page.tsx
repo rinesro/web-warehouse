@@ -5,7 +5,7 @@ import {
   fetchTotalPeminjamanCount,
 } from "@/data/peminjaman";
 import PinjamBarangClient from "@/components/PinjamBarangClient";
-import db from "@/lib/db"; 
+import { prisma } from "@/lib/prisma"; 
 
 const PinjamBarangPage = async ({
   searchParams,
@@ -21,7 +21,8 @@ const PinjamBarangPage = async ({
   const totalItems = await fetchTotalPeminjamanCount(query);
   const rawData = await fetchDataPeminjaman(query, currentPage, sort);
 
-  const items = await db.data_barang.findMany({
+  // PERBAIKAN: Ganti 'db' jadi 'prisma'
+  const items = await prisma.data_barang.findMany({
     select: {
       id_barang: true,
       nama_barang: true,
@@ -33,7 +34,7 @@ const PinjamBarangPage = async ({
     },
   });
 
-  const data = rawData.map((item) => ({
+  const data = rawData.map((item:any) => ({
     ...item,
     tanggal_peminjaman: item.tanggal_peminjaman
       ? item.tanggal_peminjaman.toISOString()

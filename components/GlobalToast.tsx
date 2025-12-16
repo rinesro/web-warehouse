@@ -2,28 +2,29 @@
 
 import React, { useEffect, useState } from "react";
 import Toast from "@/components/toast"; 
+import { ToastDetail } from "@/utils/toastEvent"; 
 
 export default function GlobalToast() {
-  const [toastData, setToastData] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
+  const [toastData, setToastData] = useState<ToastDetail | null>(null);
 
   useEffect(() => {
     const handleToastEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<{
-        message: string;
-        type: "success" | "error";
-      }>;
-      setToastData(customEvent.detail);
-      
-      setTimeout(() => setToastData(null), 3000);
+      const customEvent = e as CustomEvent<ToastDetail>;
+      if (customEvent.detail) {
+        setToastData(customEvent.detail);
+      }
     };
 
     window.addEventListener("show-toast", handleToastEvent);
 
-    return () => window.removeEventListener("show-toast", handleToastEvent);
+    return () => {
+      window.removeEventListener("show-toast", handleToastEvent);
+    };
   }, []);
+
+  const handleClose = () => {
+    setToastData(null);
+  };
 
   if (!toastData) return null;
 
@@ -31,7 +32,7 @@ export default function GlobalToast() {
     <Toast
       message={toastData.message}
       type={toastData.type}
-      onClose={() => setToastData(null)}
+      onClose={handleClose}
     />
   );
 }
