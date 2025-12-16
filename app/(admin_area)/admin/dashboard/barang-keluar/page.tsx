@@ -34,13 +34,11 @@ const BarangKeluarPage = async ({
   const items = await fetchAllBarang();
 
   // Serialize data
-  const data = recentKeluar.map((item: BarangKeluar) => ({ 
-    id: item.id,
-    tanggal: item.tanggal_keluar.toISOString(),
-    nama_barang: item.barang.nama_barang,
-    jumlah: item.jumlah_keluar,
-    satuan: item.barang.satuan_barang,
-    penerima: item.nama_penerima,
+  const data = rawData.map((item) => ({ // <-- Menggunakan rawData, BUKAN recentKeluar
+    ...item,
+    tanggal_keluar: item.tanggal_keluar.toISOString(),
+    createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
   }));
 
   return (
