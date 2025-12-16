@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { deletePeminjamanAction } from "@/lib/action";
 import { FaTrash } from "react-icons/fa";
-import Toast from "@/components/toast"; // Import Toast
+import Toast from "@/components/toast"; 
+import DelayedOverlay from "@/components/DelayedOverlay";
 
 export default function DeletePeminjamanButton({
   id,
@@ -22,15 +23,12 @@ export default function DeletePeminjamanButton({
     setIsDeleting(true);
     try {
       const result = await deletePeminjamanAction(id);
-      
-      // Kita cek result.success (asumsi action Anda mengembalikan object {success, message})
       if (result && result.success) {
         setToast({ message: "Data peminjaman berhasil dihapus!", type: "success" });
         setTimeout(() => {
           setIsOpen(false);
         }, 100);
       } else {
-         // Fallback jika action return valuenya beda, tapi biasanya formatnya sama
         setToast({ message: result?.message || "Gagal menghapus data!", type: "error" });
       }
     } catch (error) {
@@ -57,6 +55,7 @@ export default function DeletePeminjamanButton({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-200">
             <div className="p-6 text-center">
+              {isDeleting && <DelayedOverlay />}
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaTrash className="text-red-600 text-2xl" />
               </div>

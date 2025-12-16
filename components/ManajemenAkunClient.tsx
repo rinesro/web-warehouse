@@ -39,6 +39,7 @@ export default function ManajemenAkunClient({
   const columns: Column<User>[] = [
     {
       header: "No",
+      className: "text-center",
       cell: (_, index) => (
         <span className="font-semibold text-gray-600">
           {(currentPage - 1) * 5 + index + 1}
@@ -50,6 +51,7 @@ export default function ManajemenAkunClient({
     {
       header: "Role / Jabatan",
       accessorKey: "role",
+      className: "text-center",
       cell: (item) => {
         const isAdmin = item.role.toLowerCase() === "admin";
         return (
@@ -68,7 +70,7 @@ export default function ManajemenAkunClient({
     {
       header: "Aksi",
       cell: (user) => (
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-center">
           <EditAkunButton user={user} />
           <button
             onClick={() => onClickDeleteIcon(user)}

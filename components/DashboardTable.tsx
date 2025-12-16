@@ -8,6 +8,7 @@ interface Column<T> {
   header: string;
   accessorKey?: keyof T;
   cell?: (item: T, index: number) => React.ReactNode;
+  className?: string;
 }
 
 interface DashboardTableProps<T> {
@@ -17,7 +18,9 @@ interface DashboardTableProps<T> {
   filterOptions?: string[];
   title?: string;
   icon?: string;
-  lastUpdate?: string;
+  lastUpdate?: string; // Di RecentData anda kirim string, jadi ini string
+  itemsPage?: number; 
+  hidePagination?: boolean;
 }
 
 export function DashboardTable<T>({
@@ -28,24 +31,31 @@ export function DashboardTable<T>({
   title,
   icon,
   lastUpdate,
+  itemsPage = 5, // Default 5 jika tidak diisi
+  hidePagination = false, // Default false (muncul) jika tidak diisi
 }: DashboardTableProps<T>) {
   const [selectedFilter, setSelectedFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  
+  // 1. UBAH DI SINI: Gunakan itemsPage dari props, bukan hardcode 4
+  const itemsPerPage = itemsPage;
 
   const filteredData =
     filterKey && selectedFilter
       ? data.filter((item) => String(item[filterKey]) === selectedFilter)
       : data;
 
-  // Reset ke halaman 1 saat filter berubah
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedFilter]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  
+  // 2. LOGIKA DATA: Jika hidePagination true, ambil saja data awal tanpa paging
+  const currentData = hidePagination 
+    ? filteredData.slice(0, itemsPerPage) 
+    : filteredData.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePrevious = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
@@ -63,7 +73,7 @@ export function DashboardTable<T>({
             {icon && (
               <Image src={icon} width={24} height={24} alt={`${title} icon`} />
             )}
-            <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+            <h2 className="text-xl font-bold text-[#1e88e5]">{title}</h2>
           </div>
         )}
 
@@ -101,7 +111,7 @@ export function DashboardTable<T>({
               {columns.map((col, index) => (
                 <th
                   key={index}
-                  className={`px-4 py-3 text-left border-b border-blue-400 ${
+                  className={`px-4 py-3 text-center border-b border-blue-400 ${
                     index !== columns.length - 1
                       ? "border-r border-blue-400"
                       : ""
@@ -152,7 +162,7 @@ export function DashboardTable<T>({
                           colIndex !== columns.length - 1
                             ? "border-r border-blue-100"
                             : ""
-                        }`}
+                        } ${col.className || "text-left"}`}
                       >
                         {col.cell
                           ? col.cell(item, startIndex + rowIndex)
@@ -163,30 +173,11 @@ export function DashboardTable<T>({
                     ))}
                   </tr>
                 ))}
-
-                {/* Isi baris kosong untuk menjaga tinggi tabel jika diperlukan */}
-                {itemsPerPage > currentData.length &&
-                  Array.from({ length: itemsPerPage - currentData.length }).map(
-                    (_, index) => (
-                      <tr
-                        key={`empty-${index}`}
-                        className="odd:bg-white even:bg-blue-50 border-b border-blue-100"
-                      >
-                        {columns.map((_, colIndex) => (
-                          <td
-                            key={colIndex}
-                            className={`px-4 py-3 text-gray-700 ${
-                              colIndex !== columns.length - 1
-                                ? "border-r border-blue-100"
-                                : ""
-                            }`}
-                          >
-                            &nbsp;
-                          </td>
-                        ))}
-                      </tr>
-                    )
-                  )}
+                
+                {/* 3. HAPUS BAGIAN PENGISI BARIS KOSONG (EMPTY ROWS) 
+                   Agar tampilan dashboard lebih padat dan tidak ada baris putih kosong
+                   jika data kurang dari 10.
+                */}
               </>
             )}
           </tbody>
@@ -195,37 +186,41 @@ export function DashboardTable<T>({
 
       {/* Footer & Kontrol Pagination */}
       <div className="flex justify-between items-center mt-4 px-1">
+        {/* Last Update tetap muncul */}
         {lastUpdate ? (
           <p className="text-sm text-gray-700">{lastUpdate}</p>
         ) : (
           <div></div>
         )}
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrevious}
-            disabled={currentPage === 1}
-            className="p-1 rounded-full hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <FaChevronLeft className="text-gray-600" />
-          </button>
+        {/* 4. UBAH DI SINI: Sembunyikan tombol pagination jika hidePagination = true */}
+        {!hidePagination && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+              className="p-1 rounded-full hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <FaChevronLeft className="text-gray-600" />
+            </button>
 
-          <div className="bg-blue-500 text-white font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm shadow-sm">
-            {currentPage}
+            <div className="bg-blue-500 text-white font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm shadow-sm">
+              {currentPage}
+            </div>
+
+            {totalPages > 1 && currentPage < totalPages && (
+              <span className="text-gray-500 font-bold">...</span>
+            )}
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className="p-1 rounded-full hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <FaChevronRight className="text-gray-600" />
+            </button>
           </div>
-
-          {totalPages > 1 && currentPage < totalPages && (
-            <span className="text-gray-500 font-bold">...</span>
-          )}
-
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className="p-1 rounded-full hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <FaChevronRight className="text-gray-600" />
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

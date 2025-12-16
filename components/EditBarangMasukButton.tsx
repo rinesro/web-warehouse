@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import DelayedOverlay from "@/components/DelayedOverlay"; // 1. Import Overlay
 import { FaEdit, FaTimes } from "react-icons/fa";
 import { updateBarangMasukAction } from "@/lib/action";
 import Toast from "@/components/toast";
+
 interface EditBarangMasukButtonProps {
   id: number;
   nama_barang: string;
@@ -17,11 +19,16 @@ export default function EditBarangMasukButton({
 }: EditBarangMasukButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [jumlah, setJumlah] = useState(jumlah_awal);
+  
+  // State ini sudah ada, kita pakai saja untuk memicu overlay
   const [isLoading, setIsLoading] = useState(false);
+  
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsLoading(true); // Overlay muncul (hidden selama 0.3s pertama)
+    
     const formData = new FormData();
     formData.append("jumlah_barang", jumlah.toString());
 
@@ -36,7 +43,7 @@ export default function EditBarangMasukButton({
     } catch (error) {
       setToast({ message: "Terjadi kesalahan sistem.", type: "error" }); 
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Overlay hilang
     }
   };
 
@@ -53,7 +60,12 @@ export default function EditBarangMasukButton({
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+          {/* 2. Tambahkan class 'relative' di sini */}
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100 relative">
+            
+            {/* 3. Tampilkan Overlay jika isLoading true */}
+            {isLoading && <DelayedOverlay />}
+
             {/* Header */}
             <div className="bg-blue-600 px-6 py-4 border-b border-blue-500 flex justify-between items-center">
               <div className="flex items-center gap-2 text-white">
@@ -63,6 +75,7 @@ export default function EditBarangMasukButton({
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-white/80 hover:text-white transition-colors"
+                disabled={isLoading} // Disable close saat loading
               >
                 <FaTimes size={20} />
               </button>

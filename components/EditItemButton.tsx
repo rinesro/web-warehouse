@@ -1,24 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useActionState } from "react";
+import { useState, useEffect, useActionState, useTransition } from "react";
+import DelayedOverlay from "@/components/DelayedOverlay"; // 1. Import Overlay
 import { updateItemAction } from "@/lib/action";
-import { useFormStatus } from "react-dom";
 import { FaEdit } from "react-icons/fa";
 import Toast from "@/components/toast";
-
-const SubmitButton = () => {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 font-semibold"
-    >
-      {pending ? "Menyimpan..." : "Simpan Perubahan"}
-    </button>
-  );
-};
 
 interface EditItemProps {
   item: {
@@ -32,8 +18,13 @@ interface EditItemProps {
 
 export default function EditItemButton({ item }: EditItemProps) {
   const [isOpen, setIsOpen] = useState(false);
+  
+  // 2. Setup useTransition
+  const [isPending, startTransition] = useTransition();
+
   const updateItemWithId = updateItemAction.bind(null, item.id_barang);
   const [state, formAction] = useActionState(updateItemWithId, null);
+  
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
@@ -45,9 +36,17 @@ export default function EditItemButton({ item }: EditItemProps) {
     }
   }, [state]);
 
+  // 3. Wrapper Handle Submit
+  const handleSubmit = (formData: FormData) => {
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
+
   return (
     <>
-    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      
       <button
         onClick={() => setIsOpen(true)}
         className="bg-yellow-100 p-2 rounded text-yellow-600 hover:bg-yellow-200 transition-colors"
@@ -58,7 +57,12 @@ export default function EditItemButton({ item }: EditItemProps) {
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+          {/* 4. Tambahkan Class 'relative' */}
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 relative">
+            
+            {/* 5. Pasang DelayedOverlay */}
+            {isPending && <DelayedOverlay />}
+
             {/* Header */}
             <div className="bg-blue-600 px-6 py-4 border-b border-blue-500 flex justify-between items-center">
               <div className="flex items-center gap-2 text-white">
@@ -68,14 +72,15 @@ export default function EditItemButton({ item }: EditItemProps) {
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-white/80 hover:text-white transition-colors"
+                disabled={isPending} // Disable saat loading
               >
                 ✕
               </button>
             </div>
 
             <div className="p-6">
-
-              <form action={formAction} className="space-y-4">
+              {/* 6. Gunakan handleSubmit */}
+              <form action={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Nama Barang
@@ -146,7 +151,14 @@ export default function EditItemButton({ item }: EditItemProps) {
                 </div>
 
                 <div className="pt-2">
-                  <SubmitButton />
+                  {/* 7. Tombol Submit Biasa */}
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 font-semibold"
+                  >
+                    {isPending ? "Menyimpan..." : "Simpan Perubahan"}
+                  </button>
                 </div>
               </form>
             </div>

@@ -29,7 +29,6 @@ const initialState: FormState = {
 export default function FormTambahAkun() {
   const router = useRouter();
   
-  // 2. Pasang type FormState pada useActionState
   const [state, formAction, isPendingAction] = useActionState(
     createUserAction as (state: FormState | null, payload: FormData) => Promise<FormState>,
     initialState
@@ -37,14 +36,21 @@ export default function FormTambahAkun() {
 
   const [isPendingTransition, startTransition] = useTransition();
   const isPending = isPendingAction || isPendingTransition;
+
+  // Cek apakah ada error validasi field
+  const hasValidationErrors = state?.error && Object.keys(state.error).length > 0;
+
   useEffect(() => {
     if (state.success) {
+      // 1. Sukses -> Toast Muncul
       triggerToast(state.message || "Berhasil disimpan!", "success");
       router.push("/admin/dashboard/manajemen-akun");
-    } else if (state.message) {
+    } else if (state.message && !hasValidationErrors) {
+      // 2. Error Sistem (Bukan salah input) -> Toast Muncul
       triggerToast(state.message, "error");
     }
-  }, [state, router]);
+    // 3. Error Validasi -> Toast TIDAK Muncul (Hanya teks merah di bawah input)
+  }, [state, router, hasValidationErrors]);
 
   const handleSubmit = (formData: FormData) => {
     startTransition(() => {
@@ -79,13 +85,12 @@ export default function FormTambahAkun() {
               <input
                 type="text"
                 name="name"
-                // Hapus 'required' html validation jika ingin test validasi backend, atau biarkan.
                 placeholder="Contoh: Budi Santoso"
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white placeholder-gray-400"
               />
-              {/* Notifikasi Error Input Nama */}
+              {/* Error Merah di Bawah Input */}
               {state?.error?.name && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm mt-1">
                   {state.error.name[0]}
                 </p>
               )}
@@ -99,9 +104,8 @@ export default function FormTambahAkun() {
                 placeholder="email@kelurahan.go.id"
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white placeholder-gray-400"
               />
-              {/* Notifikasi Error Input Email */}
               {state?.error?.email && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm mt-1">
                   {state.error.email[0]}
                 </p>
               )}
@@ -127,9 +131,8 @@ export default function FormTambahAkun() {
                   <FaCaretDown />
                 </div>
               </div>
-               {/* Notifikasi Error Input Role */}
                {state?.error?.role && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm mt-1">
                   {state.error.role[0]}
                 </p>
               )}
@@ -143,9 +146,8 @@ export default function FormTambahAkun() {
                 placeholder="Minimal 6 karakter"
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white placeholder-gray-400"
               />
-               {/* Notifikasi Error Input Password */}
                {state?.error?.password && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm mt-1">
                   {state.error.password[0]}
                 </p>
               )}
@@ -153,15 +155,6 @@ export default function FormTambahAkun() {
           </div>
 
           <div className="h-2 w-full bg-white"></div>
-
-          {/* Error Message General (Muncul di atas tombol jika ada error global) */}
-          {state?.message && !state.success && (
-            <div className="px-6 pt-4">
-              <p className="text-red-500 text-center font-medium">
-                {state.message}
-              </p>
-            </div>
-          )}
 
           <div className="p-6 flex gap-4">
             <button

@@ -43,6 +43,7 @@ export default function BarangMasukClient({
       header: "No",
       cell: (_: Data_barang_masuk_with_relation, index: number) =>
         (currentPage - 1) * 7 + index + 1,
+      className: "text-center",
     },
     {
       header: "Nama Barang",
@@ -52,6 +53,7 @@ export default function BarangMasukClient({
     {
       header: "Tanggal Masuk",
       accessorKey: "tanggal_masuk",
+      className: "text-center",
       cell: (item) =>
         new Date(item.tanggal_masuk).toLocaleDateString("id-ID", {
           day: "numeric",
@@ -66,12 +68,13 @@ export default function BarangMasukClient({
     {
       header: "Jumlah",
       accessorKey: "jumlah_barang",
+      className: "text-center",
       cell: (item) => `${item.jumlah_barang} ${item.data_barang.satuan_barang}`,
     },
     {
       header: "Aksi",
       cell: (item) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-center">
           <EditBarangMasukButton
             id={item.id_barang_masuk}
             nama_barang={item.data_barang.nama_barang}

@@ -141,7 +141,7 @@ export function Table<T>({
                   <th
                     key={index}
                     scope="col"
-                    className={`px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider border-b border-blue-400 ${
+                    className={`px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider border-b border-blue-400 ${
                       index !== columns.length - 1
                         ? "border-r border-blue-400"
                         : ""
@@ -198,7 +198,7 @@ export function Table<T>({
                           colIndex !== columns.length - 1
                             ? "border-r border-blue-100"
                             : ""
-                        }`}
+                        } ${col.className || "text-left"}`}
                       >
                         {col.cell
                           ? col.cell(item, rowIndex)
@@ -242,8 +242,8 @@ export function Table<T>({
       {/* Pagination & Summary (Outside Table) */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
         <p className="text-sm text-gray-600">
-          Jumlah {entryLabel}{" "}
-          <span className="font-bold text-gray-900">
+          Jumlah {entryLabel}:{" "}
+          <span className=" text-gray-600">
             {totalItems !== undefined ? totalItems : itemsPage}
           </span>
         </p>

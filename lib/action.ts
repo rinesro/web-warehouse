@@ -106,17 +106,40 @@ export const createItemAction = async (
   // Map "periode" radio button to is_stock_bulanan
   const periode = formData.get("periode");
   const is_stock_bulanan = periode === "Unreguler";
+  const stokAwal = Number(stok_barang);
+  const sumberInput = formData.get("sumber_barang") as string;
+  const keteranganSumber = formData.get("keterangan_sumber") as string;
 
+  let sumberFinal = "Stok Awal";
+  if (sumberInput === "Pembelian") {
+    sumberFinal = "Pembelian";
+  } else if (sumberInput === "Pemberian") {
+    sumberFinal = keteranganSumber ? `Pemberian (${keteranganSumber})` : "Pemberian";
+  }
   try {
-    await prisma.data_barang.create({
-      data: {
-        nama_barang,
-        stok_barang: Number(stok_barang),
-        satuan_barang,
-        is_stock_bulanan,
-      },
+    await prisma.$transaction(async (tx) => {
+      const newItem = await tx.data_barang.create({
+        data: {
+          nama_barang,
+          stok_barang: stokAwal,
+          satuan_barang,
+          is_stock_bulanan,
+        },
+      });
+
+      if (stokAwal > 0) {
+        await tx.data_barang_masuk.create({
+          data: {
+            id_barang: newItem.id_barang,
+            jumlah_barang: stokAwal,
+            tanggal_masuk: new Date(),
+            sumber_barang: sumberFinal,
+          },
+        });
+      }
     });
   } catch (error) {
+    console.error("Error creating item:", error);
     return {
       message: "Gagal menambahkan barang!",
     };
@@ -161,6 +184,9 @@ export const updateItemAction = async (
   }
 
   revalidatePath("/admin/dashboard/data-barang");
+  revalidatePath("/admin/dashboard/barang-masuk");  
+  revalidatePath("/admin/dashboard/barang-keluar"); 
+  revalidatePath("/admin/dashboard/pinjam-barang");
   return { message: "Barang berhasil diupdate!", success: true };
 };
 
@@ -210,6 +236,16 @@ export const addStockAction = async (
   const { id_barang, jumlah_barang } = validateFields.data;
   const jumlah = Number(jumlah_barang);
   const id = Number(id_barang);
+  const sumberInput = formData.get("sumber_barang") as string;
+  const keteranganSumber = formData.get("keterangan_sumber") as string;
+  let sumberFinal = "Penambahan Stok"; // Default fallback
+  if (sumberInput === "Pembelian") {
+    sumberFinal = "Pembelian";
+  } else if (sumberInput === "Pemberian") {
+    sumberFinal = keteranganSumber ? `Pemberian (${keteranganSumber})` : "Pemberian";
+  } else if (sumberInput === "Lainnya") {
+    sumberFinal = keteranganSumber ? `Lainnya (${keteranganSumber})` : "Lainnya";
+  }
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -228,7 +264,7 @@ export const addStockAction = async (
         data: {
           id_barang: id,
           jumlah_barang: jumlah,
-          sumber_barang: "Penambahan Stok",
+          sumber_barang: sumberFinal,
           tanggal_masuk: new Date(),
         },
       });

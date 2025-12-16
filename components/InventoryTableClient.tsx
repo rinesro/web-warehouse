@@ -15,8 +15,8 @@ interface Data_barang {
   stok_barang: number;
   satuan_barang: string;
   is_stock_bulanan: boolean;
-  createdAt: string; // Tanggal yang diserialisasi
-  updatedAt: string; // Tanggal yang diserialisasi
+  createdAt: string; 
+  updatedAt: string; 
 }
 
 interface InventoryTableClientProps {
@@ -34,13 +34,13 @@ export default function InventoryTableClient({
 }: InventoryTableClientProps) {
   const router = useRouter();
 
-  // Definisi Kolom Tabel di Komponen Client
   const columns = useMemo<Column<Data_barang>[]>(
     () => [
       {
         header: "No",
         cell: (_: Data_barang, index: number) =>
           (currentPage - 1) * 7 + index + 1,
+        className: "text-center",
       },
       {
         header: "Nama Barang",
@@ -49,30 +49,33 @@ export default function InventoryTableClient({
       {
         header: "Stok",
         accessorKey: "stok_barang",
+        className: "text-center",
       },
       {
         header: "Satuan",
         accessorKey: "satuan_barang",
+        className: "text-center",
       },
       {
         header: "Jenis Stok",
         accessorKey: "is_stock_bulanan",
+        className: "text-center",
         cell: (item: Data_barang) => (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
+            className={`px-2 py-1 rounded-full text-xm font-medium ${
               item.is_stock_bulanan
                 ? "bg-purple-100 text-purple-700"
                 : "bg-green-100 text-green-700"
             }`}
           >
-            {item.is_stock_bulanan ? "Bulanan" : "Reguler"}
+            {item.is_stock_bulanan ? "Unreguler" : "Reguler"}
           </span>
         ),
       },
       {
         header: "Aksi",
         cell: (item: Data_barang) => (
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-center gap-2">
             <EditItemButton
               item={{
                 id_barang: item.id_barang,
@@ -99,7 +102,7 @@ export default function InventoryTableClient({
       { label: "Stok Sedikit", value: "stok-asc" },
       { label: "Nama A-Z", value: "nama-asc" },
       { label: "Nama Z-A", value: "nama-desc" },
-      { label: "Stok Bulanan", value: "bulanan" },
+      { label: "Stok Unreguler", value: "Unreguler" },
       { label: "Stok Reguler", value: "reguler" },
     ],
     []

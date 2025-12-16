@@ -47,15 +47,18 @@ const BarangKeluarClient = ({
       header: "No",
       cell: (_: BarangKeluarWithRelation, index: number) =>
         (currentPage - 1) * 7 + index + 1,
+      className: "text-center",
     },
     {
       header: "Nama Barang",
       accessorKey: "data_barang",
+      // KEMBALI KE ORIGINAL: Tidak ada styling bold/aneh-aneh
       cell: (item) => item.data_barang.nama_barang,
     },
     {
       header: "Tanggal Keluar",
       accessorKey: "tanggal_keluar",
+      className: "text-center",
       cell: (item) =>
         new Date(item.tanggal_keluar).toLocaleDateString("id-ID", {
           day: "numeric",
@@ -66,16 +69,39 @@ const BarangKeluarClient = ({
     {
       header: "Keterangan",
       accessorKey: "keterangan",
+      cell: (item) => {
+        const text = item.keterangan;
+        if (text.includes("Diberikan kepada:")) {
+            const parts = text.split("Diberikan kepada:");
+            return (
+                <span>
+                    Diberikan kepada: {parts[1]}
+                </span>
+            );
+        }
+        if (text.includes("Lainnya:")) {
+             const parts = text.split("Lainnya:");
+             return (
+                <span>
+                    {parts[1]}
+                </span>
+             );
+        }
+
+        // Tampilan default untuk data lama
+        return text;
+      }
     },
     {
       header: "Jumlah",
       accessorKey: "jumlah_keluar",
+      className: "text-center",
       cell: (item) => `${item.jumlah_keluar} ${item.data_barang.satuan_barang}`,
     },
     {
       header: "Aksi",
       cell: (item) => (
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-center">
           <EditBarangKeluarButton item={item} items={items} />
           <DeleteBarangKeluarButton
             id={item.id_barang_keluar}

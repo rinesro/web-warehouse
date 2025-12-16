@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { deleteBarangMasukAction } from "@/lib/action";
-import Toast from "@/components/toast"; // Import Toast
-
+import Toast from "@/components/toast"; 
+import DelayedOverlay from "@/components/DelayedOverlay";
 interface DeleteBarangMasukButtonProps {
   id: number;
   nama_barang: string;
@@ -55,6 +55,7 @@ export default function DeleteBarangMasukButton({
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-200">
+            {isLoading && <DelayedOverlay />}
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaTrash className="text-red-600 text-2xl" />

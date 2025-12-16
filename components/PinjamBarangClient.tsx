@@ -36,6 +36,7 @@ interface PeminjamanUI {
   tanggal_pinjam: string; 
   display_tanggal: string;
   jumlah: number;
+  satuan: string;
   status: string;
   no_telepon: string;
   alamat: string;
@@ -92,6 +93,7 @@ export default function PinjamBarangClient({
             })
           : "-",
         jumlah: item.jumlah_peminjaman,
+        satuan: item.data_barang.satuan_barang,
         status: item.status_peminjaman,
         no_telepon: item.no_telepon,
         alamat: item.alamat || "",
@@ -133,12 +135,14 @@ export default function PinjamBarangClient({
         header: "No",
         cell: (_: PeminjamanUI, index: number) =>
           (currentPage - 1) * 10 + index + 1,
+        className: "text-center",
       },
-      { header: "No. KTP", accessorKey: "nomor_ktp" },
+      { header: "No. KTP", className: "text-center", accessorKey: "nomor_ktp" },
       { header: "Peminjam", accessorKey: "nama_peminjam" },
       {
         header: "Kategori",
         accessorKey: "kategori",
+        className: "text-center",
         cell: (item) => (
           <span
             className={`text-xs font-bold px-2 py-1 rounded-full border ${
@@ -152,11 +156,20 @@ export default function PinjamBarangClient({
         ),
       },
       { header: "Barang", accessorKey: "nama_barang" },
-      { header: "Tgl Pinjam", accessorKey: "display_tanggal" },
-      { header: "Jml", accessorKey: "jumlah" },
+      { header: "Tgl Pinjam", className: "text-center", accessorKey: "display_tanggal" },
+      { 
+        header: "Jumlah", 
+        className: "text-center", 
+        accessorKey: "jumlah",
+        cell: (item) => (
+            <span>
+              {item.jumlah} {item.satuan}
+            </span>
+          ), },
       {
         header: "Status",
         accessorKey: "status",
+        className: "text-center",
         cell: (item) => (
           <span
             className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -172,7 +185,7 @@ export default function PinjamBarangClient({
       {
         header: "Aksi",
         cell: (item) => (
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             {item.status !== "Dikembalikan" && (
               <ReturnPeminjamanButton
                 id={item.id}

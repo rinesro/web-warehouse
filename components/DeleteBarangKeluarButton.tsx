@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { deleteBarangKeluar } from "@/actions/barangKeluar";
 import { FaTrash } from "react-icons/fa";
-import Toast from "@/components/toast"; // Import Toast
+import Toast from "@/components/toast"; 
+import DelayedOverlay from "@/components/DelayedOverlay";
 
 export default function DeleteBarangKeluarButton({
   id,
@@ -14,14 +15,12 @@ export default function DeleteBarangKeluarButton({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  // State Toast
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
       await deleteBarangKeluar(id);
-      // Asumsi jika tidak throw error, berarti sukses
       setToast({ message: "Data berhasil dihapus!", type: "success" });
       setTimeout(() => {
         setIsOpen(false);
@@ -49,6 +48,7 @@ export default function DeleteBarangKeluarButton({
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-200">
+            {isDeleting && <DelayedOverlay />}
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaTrash className="text-red-600 text-2xl" />

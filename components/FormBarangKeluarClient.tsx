@@ -23,6 +23,10 @@ export default function FormBarangKeluarClient({
   items,
 }: FormBarangKeluarClientProps) {
   const router = useRouter();
+  
+  // 1. Tambahkan State untuk memantau pilihan Keterangan
+  const [selectedKeterangan, setSelectedKeterangan] = useState("");
+  
   const [state, formAction, isPending] = useActionState<State, FormData>(
     createBarangKeluar,
     initialState
@@ -110,18 +114,38 @@ export default function FormBarangKeluarClient({
                 <select
                   name="keterangan"
                   className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 appearance-none bg-white cursor-pointer"
-                  defaultValue=""
+                  value={selectedKeterangan}
+                  // 2. Update state saat dropdown berubah
+                  onChange={(e) => setSelectedKeterangan(e.target.value)}
                 >
                   <option value="" disabled>
                     Pilih Keterangan ...
                   </option>
                   <option value="Dipakai Habis">Dipakai Habis</option>
-                  <option value="Diberikan">Diberikan</option>
+                  <option value="Diberikan">Diberikan (Hibah/Bantuan)</option>
+                  <option value="Rusak">Rusak / Kadaluarsa</option>
+                  <option value="Lainnya">Lainnya</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-black">
                   <FaCaretDown />
                 </div>
               </div>
+              
+              {/* 3. Input Tambahan Muncul Secara Kondisional */}
+              {(selectedKeterangan === "Diberikan" || selectedKeterangan === "Lainnya") && (
+                <div className="mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-sm text-gray-600 mb-1 block">
+                        {selectedKeterangan === "Diberikan" ? "Diberikan Kepada:" : "Detail Keterangan:"}
+                    </label>
+                    <input 
+                        type="text" 
+                        name="detail_keterangan" // Nama field baru untuk ditangkap di Server Action
+                        placeholder={selectedKeterangan === "Diberikan" ? "Contoh: Ketua RW 05, Posyandu..." : "Jelaskan detailnya..."}
+                        className="w-full p-3 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-blue-400 outline-none text-gray-700"
+                    />
+                </div>
+              )}
+
               {state.error?.keterangan && (
                 <p className="text-red-500 text-sm mt-1">
                   {state.error.keterangan}

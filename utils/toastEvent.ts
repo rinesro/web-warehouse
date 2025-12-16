@@ -1,4 +1,3 @@
-
 type ToastEventType = {
   message: string;
   type: "success" | "error";

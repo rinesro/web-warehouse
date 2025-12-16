@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation"; // Redirect dihapus agar Toast di client bisa jalan
 import { z } from "zod";
 
 const CreateBarangKeluarSchema = z.object({
@@ -20,6 +20,7 @@ export type State = {
     keterangan?: string[];
   };
   message?: string;
+  success?: boolean;
 };
 
 export async function createBarangKeluar(
@@ -39,11 +40,24 @@ export async function createBarangKeluar(
     };
   }
 
-  const { id_barang, tanggal_keluar, jumlah_keluar, keterangan } =
-    validatedFields.data;
+  const { id_barang, tanggal_keluar, jumlah_keluar, keterangan } = validatedFields.data;
+
+  // --- LOGIKA TAMBAHAN (Wajib Ada) ---
+  // 1. Ambil detail dari form (yang kita buat di frontend tadi)
+  const detailKeterangan = formData.get("detail_keterangan") as string;
+  
+  // 2. Gabungkan Text sesuai format yang diinginkan
+  let keteranganFinal = keterangan;
+
+  if (keterangan === "Diberikan" && detailKeterangan) {
+    keteranganFinal = `Diberikan kepada: ${detailKeterangan}`;
+  } else if (keterangan === "Lainnya" && detailKeterangan) {
+    keteranganFinal = `Lainnya: ${detailKeterangan}`;
+  }
+  // ------------------------------------
 
   try {
-    // Check stock availability
+    // Cek stok tersedia
     const barang = await prisma.data_barang.findUnique({
       where: { id_barang },
     });
@@ -62,14 +76,14 @@ export async function createBarangKeluar(
       };
     }
 
-    // Transaction: Create record and update stock
+    // Transaction: Simpan Record & Update Stok
     await prisma.$transaction([
       prisma.data_barang_keluar.create({
         data: {
           id_barang,
           tanggal_keluar: new Date(tanggal_keluar),
           jumlah_keluar,
-          keterangan,
+          keterangan: keteranganFinal, // <--- PENTING: Gunakan variabel yang sudah digabung
         },
       }),
       prisma.data_barang.update({
@@ -89,8 +103,14 @@ export async function createBarangKeluar(
   }
 
   revalidatePath("/admin/dashboard/barang-keluar");
-  redirect("/admin/dashboard/barang-keluar");
+  revalidatePath("/admin/dashboard/data-barang");
+  
+  // Return message sukses agar Client Component bisa redirect manual + show Toast
+  return { message: "Berhasil menyimpan data barang keluar!" };
 }
+
+// ... (Sisa kode updateBarangKeluar dan deleteBarangKeluar biarkan sama, atau sesuaikan logika update-nya jika perlu)
+
 const UpdateBarangKeluarSchema = z.object({
   id_barang: z.coerce.number().min(1, "Pilih barang terlebih dahulu"),
   tanggal_keluar: z.string().min(1, "Tanggal keluar wajib diisi"),
@@ -116,8 +136,7 @@ export async function updateBarangKeluar(
     };
   }
 
-  const { id_barang, tanggal_keluar, jumlah_keluar, keterangan } =
-    validatedFields.data;
+  const { id_barang, tanggal_keluar, jumlah_keluar, keterangan } = validatedFields.data;
 
   try {
     const oldRecord = await prisma.data_barang_keluar.findUnique({
@@ -136,13 +155,7 @@ export async function updateBarangKeluar(
       return { message: "Barang tidak ditemukan" };
     }
 
-    // Check if stock is sufficient (current stock + old amount - new amount)
-    // If id_barang changed, we need to handle differently, but assuming id_barang doesn't change for now or simple check
-    // If id_barang changes, we revert old stock on old item, and check new item.
-    // For simplicity, let's assume id_barang CAN change.
-
     if (oldRecord.id_barang === id_barang) {
-      // Same item
       const availableStock = barang.stok_barang + oldRecord.jumlah_keluar;
       if (availableStock < jumlah_keluar) {
         return { error: { jumlah_keluar: ["Stok tidak mencukupi"] } };
@@ -154,7 +167,7 @@ export async function updateBarangKeluar(
           data: {
             tanggal_keluar: new Date(tanggal_keluar),
             jumlah_keluar,
-            keterangan,
+            keterangan, // Jika ingin update keterangan detail juga, tambahkan logika serupa di sini
           },
         }),
         prisma.data_barang.update({
@@ -167,25 +180,16 @@ export async function updateBarangKeluar(
         }),
       ]);
     } else {
-      // Item changed
-      // 1. Revert old item stock
-      // 2. Check new item stock
-      // 3. Update record
-      // 4. Update new item stock
-
-      // Revert old
+      // Logic ganti barang (revert stok lama, kurangi stok baru)
       await prisma.data_barang.update({
         where: { id_barang: oldRecord.id_barang },
         data: { stok_barang: { increment: oldRecord.jumlah_keluar } },
       });
 
-      // Check new
       const newBarang = await prisma.data_barang.findUnique({
         where: { id_barang },
       });
       if (!newBarang || newBarang.stok_barang < jumlah_keluar) {
-        // Rollback revert? No, transaction handles it if we group them.
-        // But we need to fetch first.
         throw new Error("Stok barang baru tidak mencukupi");
       }
 
@@ -211,7 +215,7 @@ export async function updateBarangKeluar(
   }
 
   revalidatePath("/admin/dashboard/barang-keluar");
-  return { message: "Berhasil update", success: true } as any;
+  return { message: "Berhasil update data!" };
 }
 
 export async function deleteBarangKeluar(id_barang_keluar: number) {

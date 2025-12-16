@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useActionState } from "react";
+import React, { useState, useActionState, useTransition, useEffect } from "react";
 import Image from "next/image";
 import { FaCaretDown } from "react-icons/fa";
 import { useRouter } from "next/navigation";
@@ -17,7 +17,7 @@ interface FormState {
   error?: {
     id_barang?: string[];
     jumlah_barang?: string[];
-    sumber_barang?: string[];
+    sumber_barang?: string[]; // Tambahkan ini
   };
   message?: string;
   success?: boolean;
@@ -26,6 +26,13 @@ interface FormState {
 export default function FormTambahStok({ items }: { items: Item[] }) {
   const router = useRouter();
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  
+  // 1. Setup Sumber Barang State
+  const [sumber, setSumber] = useState(""); 
+  
+  // 2. Setup Transition
+  const [isPending, startTransition] = useTransition();
+
   const [state, formAction] = useActionState(
     addStockAction as (
       state: FormState | null,
@@ -34,22 +41,30 @@ export default function FormTambahStok({ items }: { items: Item[] }) {
     null
   );
 
-
   const handleItemChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = Number(e.target.value);
     const item = items.find((i) => i.id_barang === id);
     setSelectedItem(item || null);
   };
 
-  React.useEffect(() => {
+  // 3. Logic Toast & Error (Tanpa Pop-up Validasi)
+  const hasValidationErrors = state?.error && Object.keys(state.error).length > 0;
+
+  useEffect(() => {
     if (state?.success) {
-      triggerToast(state.message || "Barang berhasil ditambahkan!", "success");
-      router.push("/admin/dashboard/data-barang");
-      
-    } else if (state?.message) {
+      triggerToast(state.message || "Stok berhasil ditambahkan!", "success");
+      router.push("/admin/dashboard/barang-masuk");
+    } else if (state?.message && !hasValidationErrors) {
+      // Toast Error hanya muncul jika BUKAN error validasi input
       triggerToast(state.message, "error");
     }
-  }, [state?.success, state?.message, router]);
+  }, [state, router, hasValidationErrors]);
+
+  const handleSubmit = (formData: FormData) => {
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
   
   return (
     <div className="w-full bg-white p-6 rounded-xl">
@@ -72,7 +87,12 @@ export default function FormTambahStok({ items }: { items: Item[] }) {
 
       {/* Form Container */}
       <div className="bg-[#BBDEFB] rounded-xl overflow-hidden shadow-sm border border-blue-100">
-        <form action={formAction} className="flex flex-col">
+        <form 
+          action={handleSubmit} 
+          className="flex flex-col"
+          noValidate // Matikan validasi browser
+        >
+          
           {/* Row 1: Nama Barang */}
           <div className="p-6">
             <div className="flex flex-col gap-2">
@@ -98,12 +118,11 @@ export default function FormTambahStok({ items }: { items: Item[] }) {
                 </div>
               </div>
               {state?.error?.id_barang && (
-                <p className="text-red-500 text-sm">{state.error.id_barang}</p>
+                <p className="text-red-500 text-sm mt-1">{state.error.id_barang}</p>
               )}
             </div>
           </div>
 
-          {/* White Separator */}
           <div className="h-2 w-full bg-white"></div>
 
           {/* Row 2: Satuan Barang & Jumlah */}
@@ -128,37 +147,69 @@ export default function FormTambahStok({ items }: { items: Item[] }) {
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white"
               />
               {state?.error?.jumlah_barang && (
-                <p className="text-red-500 text-sm">
+                <p className="text-red-500 text-sm mt-1">
                   {state.error.jumlah_barang}
                 </p>
               )}
             </div>
           </div>
 
-          {/* White Separator */}
           <div className="h-2 w-full bg-white"></div>
 
-          {/* Error Message General */}
-          {state?.message && !state.success && (
-            <div className="px-6 pt-4">
-              <p className="text-red-500 text-center font-medium">
-                {state.message}
-              </p>
+          {/* Row 3: Sumber Barang (Fitur Baru) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 items-start">
+            <div className="flex flex-col gap-2">
+              <label className="text-black font-semibold">Sumber Barang</label>
+              <div className="relative">
+                <select 
+                  name="sumber_barang" 
+                  value={sumber}
+                  onChange={(e) => setSumber(e.target.value)}
+                  className="w-full p-3 rounded-lg border-none outline-none text-gray-700 bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="" disabled>Pilih Sumber ...</option>
+                  <option value="Pembelian">Pembelian (Anggaran Kantor)</option>
+                  <option value="Pemberian">Pemberian / Hibah</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-black">
+                  <FaCaretDown />
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Input Tambahan: Muncul jika Pilih 'Pemberian' atau 'Lainnya' */}
+            {(sumber === "Pemberian" || sumber === "Lainnya") && (
+              <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-black font-semibold">
+                    {sumber === "Pemberian" ? "Detail Pemberi" : "Keterangan"}
+                </label>
+                <input 
+                  name="keterangan_sumber" 
+                  type="text" 
+                  placeholder={sumber === "Pemberian" ? "Contoh: Warga RT 05..." : "Contoh: Sisa Kegiatan..."}
+                  className="w-full p-3 rounded-lg border-none outline-none text-gray-700 bg-white focus:ring-2 focus:ring-blue-400 placeholder:text-gray-400" 
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="h-2 w-full bg-white"></div>
 
           {/* Buttons */}
           <div className="p-6 flex gap-4">
             <button
               type="submit"
-              className="bg-white text-[#4285F4] font-bold py-2 px-8 rounded-xl shadow hover:bg-gray-50 transition-colors"
+              disabled={isPending}
+              className="bg-white text-[#4285F4] font-bold py-2 px-8 rounded-xl shadow hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Simpan
+              {isPending ? "Menyimpan..." : "Simpan"}
             </button>
             <button
               type="button"
+              disabled={isPending}
               onClick={() => router.push("/admin/dashboard/barang-masuk")}
-              className="bg-[#616161] text-white font-bold py-2 px-8 rounded-xl shadow hover:bg-gray-700 transition-colors"
+              className="bg-[#616161] text-white font-bold py-2 px-8 rounded-xl shadow hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               Batal
             </button>

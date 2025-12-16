@@ -66,7 +66,25 @@ const Sidebar = ({
     handleResize(); 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, []); 
+
+
+  useEffect(() => {
+    if (
+      pathname.includes("/data-barang") || 
+      pathname.includes("/barang-masuk") || 
+      pathname.includes("/barang-keluar")
+    ) {
+      setOpenManajemen(true); 
+    }
+    if (
+      pathname.includes("/laporan-stok") || 
+      pathname.includes("/laporan-barang-masuk") || 
+      pathname.includes("/laporan-barang-keluar")
+    ) {
+      setOpenLaporan(true); 
+    }
+  }, [pathname]);
 
   const getBaseClass = (collapsed: boolean) => 
     `group relative w-full py-3 flex items-center rounded-r-lg transition-all duration-200 select-none border-l-4

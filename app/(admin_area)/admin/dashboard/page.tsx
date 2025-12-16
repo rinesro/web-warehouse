@@ -19,6 +19,7 @@ export default async function DashboardPage() {
     nama_barang: item.nama_barang,
     tanggal: item.tanggal_peminjaman.toISOString(), 
     jumlah: item.jumlah,
+    satuan: item.satuan,
     jenis: item.status_peminjaman, 
     keterangan: item.nama_peminjam, 
   }));

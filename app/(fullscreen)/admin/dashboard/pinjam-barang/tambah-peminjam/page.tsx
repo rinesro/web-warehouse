@@ -1,18 +1,9 @@
 import React from "react";
-import { prisma } from "@/lib/prisma";
 import FormTambahPeminjaman from "@/components/FormTambahPeminjaman";
+import { fetchAllBarang } from "@/data/barang";
 
 export default async function TambahPeminjamanPage() {
-  const barangList = await prisma.data_barang.findMany({
-    select: {
-      id_barang: true,
-      nama_barang: true,
-      stok_barang: true,
-    },
-    orderBy: {
-      nama_barang: "asc",
-    },
-  });
-
+  const barangList = await fetchAllBarang();
+  
   return <FormTambahPeminjaman barangList={barangList} />;
 }

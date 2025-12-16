@@ -11,14 +11,17 @@ export default function RecentData({ data }: RecentDataProps) {
     {
       header: "No",
       cell: (_: any, index: number) => index + 1,
+      className: "text-center",
     },
     {
       header: "Nama Barang",
       accessorKey: "nama_barang" as const,
+      className: "text-left text-sm",
     },
     {
       header: "Tanggal",
       accessorKey: "tanggal" as const,
+     className: "text-center text-sm",
       cell: (item: any) =>
         item.tanggal
           ? new Date(item.tanggal).toLocaleDateString("id-ID", {
@@ -31,6 +34,7 @@ export default function RecentData({ data }: RecentDataProps) {
     {
       header: "Aktivitas", 
       accessorKey: "jenis" as const, 
+      className: "text-center",
       cell: (item: any) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -46,13 +50,18 @@ export default function RecentData({ data }: RecentDataProps) {
     {
       header: "Jumlah", 
       accessorKey: "jumlah" as const,
-      cell: (item: any) => <span className="font-medium">{item.jumlah}</span>,
+      className: "text-center",
+      cell: (item: any) => (
+        <span className="text-sm">
+          {item.jumlah} {item.satuan}
+        </span>
+      ),
     },
     {
       header: "Keterangan", 
       accessorKey: "keterangan" as const, 
       cell: (item: any) => (
-        <span className="text-gray-500 text-xs truncate max-w-[150px] block" title={item.keterangan}>
+        <span className="text-gray-500 text-xs truncate max-w-37.5 block" title={item.keterangan}>
           {item.keterangan}
         </span>
       ),
@@ -65,6 +74,8 @@ export default function RecentData({ data }: RecentDataProps) {
       icon="/recent_logo.png"
       columns={columns}
       data={data}
+      itemsPage={10}       
+      hidePagination={true}
       lastUpdate={`Terakhir update: ${new Date().toLocaleDateString("id-ID", {
         day: "numeric",
         month: "long",
