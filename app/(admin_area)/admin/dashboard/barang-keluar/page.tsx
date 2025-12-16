@@ -8,26 +8,46 @@ import {
 
 import { fetchAllBarang } from "@/data/barang";
 
-// Perbarui interface agar mencakup properti createdAt dan updatedAt
-// yang Anda akses di fungsi .map().
-interface BarangKeluarRaw {
-  id: number;
-  tanggal_keluar: Date; // Asumsi ini adalah objek Date dari database
-  jumlah_keluar: number;
-  barang: {
+// Asumsikan tipe ini yang diharapkan oleh komponen klien.
+// Kita harus memastikan data yang kita hasilkan SAMA persis dengan tipe ini.
+// Di sini saya gabungkan tipe raw (Date) dengan tipe serialized (string)
+// karena data yang dikirim ke komponen adalah yang sudah di-serialize.
+
+interface BarangRelasiDataBarang {
     nama_barang: string;
     satuan_barang: string;
-  };
-  nama_penerima: string;
-  createdAt: Date; // Ditambahkan
-  updatedAt: Date; // Ditambahkan
 }
 
-// Definisikan tipe untuk data yang sudah di-serialize (stringified Date)
-interface BarangKeluarSerialized extends Omit<BarangKeluarRaw, 'tanggal_keluar' | 'createdAt' | 'updatedAt'> {
-    tanggal_keluar: string;
-    createdAt: string;
-    updatedAt: string;
+interface BarangKeluarWithRelation {
+    // Properti yang hilang/salah nama:
+    id_barang_keluar: string | number; 
+    id_barang: string | number;         
+    keterangan: string | null;          
+    data_barang: BarangRelasiDataBarang;
+
+    // Properti yang sudah ada (tapi sekarang bertipe string karena sudah di-serialize):
+    id: number;
+    jumlah_keluar: number;
+    nama_penerima: string;
+    tanggal_keluar: string; // Tipe string karena sudah di-toISOString()
+    createdAt: string;      // Tipe string karena sudah di-toISOString()
+    updatedAt: string;      // Tipe string karena sudah di-toISOString()
+}
+
+// Tipe data sebelum serialisasi (Raw Data)
+interface BarangKeluarRaw {
+    id: number;
+    tanggal_keluar: Date; // Date object
+    jumlah_keluar: number;
+    nama_penerima: string;
+    createdAt: Date;      // Date object
+    updatedAt: Date;      // Date object
+    
+    // Properti yang harus ada (sama seperti di WithRelation)
+    id_barang_keluar: string | number; 
+    id_barang: string | number;         
+    keterangan: string | null;          
+    data_barang: BarangRelasiDataBarang;
 }
 
 const BarangKeluarPage = async ({
@@ -43,15 +63,25 @@ const BarangKeluarPage = async ({
   const totalPages = await fetchTotalBarangKeluarPages(query, "", "");
   const totalItems = await fetchTotalBarangKeluarCount(query, "", "");
   
-  // Asumsikan fetchDataBarangKeluar mengembalikan BarangKeluarRaw[]
+  // Pastikan rawData di-cast ke tipe Raw yang benar
   const rawData: BarangKeluarRaw[] = await fetchDataBarangKeluar(query, currentPage, "", "", sort);
   
   const items = await fetchAllBarang();
 
-  // Serialize data
-  // Memberikan tipe BarangKeluarRaw pada 'item' untuk menghilangkan error 'implicitly has an 'any' type'.
-  const data: BarangKeluarSerialized[] = rawData.map((item: BarangKeluarRaw) => ({
-    ...item,
+  // Serialize data dan pastikan outputnya sesuai dengan BarangKeluarWithRelation
+  const data: BarangKeluarWithRelation[] = rawData.map((item: BarangKeluarRaw) => ({
+    // Properti-properti yang dihasilkan harus sama persis dengan WithRelation
+    id_barang_keluar: item.id_barang_keluar,
+    id_barang: item.id_barang,
+    keterangan: item.keterangan,
+    data_barang: item.data_barang, // Asumsi relasi ini sudah dimuat oleh fetchDataBarangKeluar
+    
+    // Properti lainnya dari item
+    id: item.id,
+    jumlah_keluar: item.jumlah_keluar,
+    nama_penerima: item.nama_penerima,
+    
+    // Serialisasi Date
     tanggal_keluar: item.tanggal_keluar.toISOString(),
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
@@ -59,7 +89,7 @@ const BarangKeluarPage = async ({
 
   return (
     <BarangKeluarClient
-      data={data}
+      data={data} // Tipe data sekarang sudah BarangKeluarWithRelation[]
       totalPages={totalPages}
       currentPage={currentPage}
       totalItems={totalItems}
