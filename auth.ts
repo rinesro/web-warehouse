@@ -1,58 +1,63 @@
+// src/auth.ts
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { Adapter } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
 import Credentials from "next-auth/providers/credentials";
-import { SignInSchema } from "@/lib/zod";
 import { compareSync } from "bcrypt-ts";
+import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma) as Adapter,
-  session: { strategy: "jwt" },
-  trustHost: true,
-  pages: {
-    signIn: "/login",
+  ...authConfig,
+  // Menggunakan 'as any' untuk melewati pengecekan ketat tipe AdapterUser
+  adapter: PrismaAdapter(prisma) as any, 
+  session: { 
+    strategy: "jwt",
+    maxAge: 30 * 60, // Sesi mati otomatis jika idle 30 menit
   },
   providers: [
     Credentials({
-      credentials: {
-        email: {},
-        password: {},
-      },
-      authorize: async (credentials) => {
-        const validateFields = SignInSchema.safeParse(credentials);
-
-        if (!validateFields.success) {
-          return null;
-        }
-
-        const { email, password } = validateFields.data;
-
+      async authorize(credentials) {
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { email: credentials.email as string },
         });
 
-        if (!user || !user.password) {
-          return null;
-        }
+        if (!user || !user.password) return null;
 
-        const checkPassword = compareSync(password, user.password);
+        const isValid = compareSync(credentials.password as string, user.password);
+        if (!isValid) return null;
 
-        if (!checkPassword) return null;
+        const updatedUser = await prisma.user.update({
+          where: { id: user.id },
+          data: { tokenVersion: { increment: 1 } },
+        });
 
-        return user;
+        return updatedUser;
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role;
-      }
-      return token;
-    },
+    ...authConfig.callbacks,
     async session({ session, token }) {
-      session.user.role = token.role;
+      // Pastikan token memiliki id sebelum mengecek ke database
+      if (!token.id) return session;
+
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.id as string },
+      });
+
+      // Jika user tidak ada atau versi token tidak cocok (sudah login di tempat lain)
+      if (!dbUser || token.tokenVersion !== dbUser.tokenVersion) {
+        // Alih-alih mengembalikan objek kosong, kita kembalikan session standar tanpa user
+        // agar middleware mendeteksi user tidak login
+        return { ...session, user: { ...session.user, id: "" } };
+      }
+
+      // Sinkronisasi data asli dari Database ke UI
+      session.user.id = dbUser.id;
+      session.user.role = dbUser.role;
+      session.user.name = dbUser.name;
+      session.user.email = dbUser.email;
+
       return session;
     },
   },

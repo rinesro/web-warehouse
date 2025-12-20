@@ -79,6 +79,7 @@ export default function BarangMasukClient({
             id={item.id_barang_masuk}
             nama_barang={item.data_barang.nama_barang}
             jumlah_awal={item.jumlah_barang}
+            sumber_awal={item.sumber_barang}
           />
           <DeleteBarangMasukButton
             id={item.id_barang_masuk}

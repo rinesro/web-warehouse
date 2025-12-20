@@ -42,14 +42,11 @@ export default function FormTambahAkun() {
 
   useEffect(() => {
     if (state.success) {
-      // 1. Sukses -> Toast Muncul
       triggerToast(state.message || "Berhasil disimpan!", "success");
       router.push("/admin/dashboard/manajemen-akun");
     } else if (state.message && !hasValidationErrors) {
-      // 2. Error Sistem (Bukan salah input) -> Toast Muncul
       triggerToast(state.message, "error");
     }
-    // 3. Error Validasi -> Toast TIDAK Muncul (Hanya teks merah di bawah input)
   }, [state, router, hasValidationErrors]);
 
   const handleSubmit = (formData: FormData) => {
@@ -143,13 +140,20 @@ export default function FormTambahAkun() {
               <input
                 type="password"
                 name="password"
-                placeholder="Minimal 6 karakter"
+                // Ganti placeholder agar user tahu syaratnya
+                placeholder="Min. 8 karakter, Huruf Besar, Angka, Simbol"
                 className="w-full p-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none text-gray-700 bg-white placeholder-gray-400"
               />
+              <p className="text-[10px] text-gray-500">
+                *Wajib: Huruf Besar, Huruf Kecil, Angka, & Simbol.
+              </p>
                {state?.error?.password && (
-                <p className="text-red-500 text-sm mt-1">
-                  {state.error.password[0]}
-                </p>
+                <div className="text-red-500 text-sm mt-1 flex flex-col">
+                  {/* Tampilkan semua error validasi password baris per baris */}
+                  {state.error.password.map((err, idx) => (
+                    <span key={idx}>• {err}</span>
+                  ))}
+                </div>
               )}
             </div>
           </div>

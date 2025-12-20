@@ -40,6 +40,11 @@ interface PeminjamanUI {
   status: string;
   no_telepon: string;
   alamat: string;
+  // Kita tambahkan struktur data_barang agar kompatibel dengan EditButton tanpa 'any' yang terlalu agresif
+  data_barang: {
+    nama_barang: string;
+    satuan_barang: string;
+  }
 }
 
 interface ItemBarang {
@@ -62,7 +67,7 @@ export default function PinjamBarangClient({
   totalPages,
   currentPage,
   totalItems,
-  items,
+  items, // items tidak digunakan di sini lagi untuk EditButton, tapi biarkan saja jika nanti butuh
 }: PinjamBarangClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -97,6 +102,8 @@ export default function PinjamBarangClient({
         status: item.status_peminjaman,
         no_telepon: item.no_telepon,
         alamat: item.alamat || "",
+        // Pass data barang object untuk keperluan EditButton
+        data_barang: item.data_barang 
       };
     });
   }, [data]);
@@ -137,8 +144,13 @@ export default function PinjamBarangClient({
           (currentPage - 1) * 10 + index + 1,
         className: "text-center",
       },
-      { header: "No. KTP", className: "text-center", accessorKey: "nomor_ktp" },
+      { header: "Nomor KTP", className: "text-center", accessorKey: "nomor_ktp" },
       { header: "Peminjam", accessorKey: "nama_peminjam" },
+      { 
+        header: "Nomor Telepon/WA", 
+        accessorKey: "no_telepon",
+        className: "text-center" 
+      },
       {
         header: "Kategori",
         accessorKey: "kategori",
@@ -184,26 +196,44 @@ export default function PinjamBarangClient({
       },
       {
         header: "Aksi",
-        cell: (item) => (
-          <div className="flex gap-2 justify-center">
-            {item.status !== "Dikembalikan" && (
-              <ReturnPeminjamanButton
-                id={item.id}
-                nama_peminjam={item.nama_peminjam}
-                nama_barang={item.nama_barang}
-              />
-            )}
-            <EditPeminjamanButton item={item as any} barangList={items} />
-            <DeletePeminjamanButton
-              id={item.id}
-              nama_peminjam={item.nama_peminjam}
-              nama_barang={item.nama_barang}
-            />
-          </div>
-        ),
+        cell: (item) => {
+            // Kita mapping item UI ke struktur yang diharapkan EditPeminjamanButton
+            // Pastikan fieldnya sesuai dengan EditPeminjamanButtonProps['item']
+            const editItemProps = {
+                id_peminjaman: item.id,
+                nomor_ktp: item.nomor_ktp,
+                nama_peminjam: item.nama_peminjam,
+                kategori_peminjam: item.kategori,
+                no_telepon: item.no_telepon,
+                alamat: item.alamat,
+                jumlah_peminjaman: item.jumlah,
+                tanggal_peminjaman: item.tanggal_pinjam,
+                data_barang: item.data_barang
+            };
+
+            return (
+              <div className="flex gap-2 justify-center">
+                {item.status !== "Dikembalikan" && (
+                  <ReturnPeminjamanButton
+                    id={item.id}
+                    nama_peminjam={item.nama_peminjam}
+                    nama_barang={item.nama_barang}
+                  />
+                )}
+                {/* PERBAIKAN: Hapus 'barangList={items}' dan sesuaikan object item */}
+                <EditPeminjamanButton item={editItemProps} />
+                
+                <DeletePeminjamanButton
+                  id={item.id}
+                  nama_peminjam={item.nama_peminjam}
+                  nama_barang={item.nama_barang}
+                />
+              </div>
+            );
+        },
       },
     ],
-    [currentPage, items]
+    [currentPage] // items dihapus dari dependency karena tidak dipakai di dalam columns
   );
 
   const handleTambah = () => {

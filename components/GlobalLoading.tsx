@@ -1,10 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export default function GlobalLoading() {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname(); 
+  const searchParams = useSearchParams();
 
+  useEffect(() => {
+    setIsVisible(false);
+  }, [pathname, searchParams]);
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
