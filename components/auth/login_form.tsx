@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Image from "next/image";
 import { 
@@ -40,6 +40,7 @@ const SubmitButton = () => {
     </button>
   );
 };
+
 
 export default function LoginForm() {
   // Inisialisasi state awal sebagai null atau object kosong sesuai tipe

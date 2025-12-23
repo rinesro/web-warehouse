@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GlobalToast from "@/components/GlobalToast";
 import NextTopLoader from 'nextjs-toploader';
+import Providers from "@/components/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,8 +42,10 @@ export default function RootLayout({
           shadow="0 0 10px #2299DD,0 0 5px #2299DD"
           zIndex={1600}
         />
-        <GlobalToast />
-        {children}
+        <GlobalToast/>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

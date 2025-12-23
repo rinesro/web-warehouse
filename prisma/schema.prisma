@@ -20,7 +20,7 @@ model User {
   email        String   @unique
   password     String
   role         Role     @default(user)
-  
+  activeSessionId String?
   // Kolom Token Version (untuk Single Device Login yang kita bahas sebelumnya)
   tokenVersion Int      @default(0)
 

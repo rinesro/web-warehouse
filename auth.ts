@@ -1,63 +1,92 @@
 // src/auth.ts
-import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
-import Credentials from "next-auth/providers/credentials";
-import { compareSync } from "bcrypt-ts";
-import { authConfig } from "./auth.config";
+import NextAuth from "next-auth"
+import Credentials from "next-auth/providers/credentials"
+import { prisma } from "@/lib/prisma" 
+import { compare } from "bcrypt-ts" 
+import crypto from "crypto"
+import { authConfig } from "./auth.config" 
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const GLOBAL_SESSION_VERSION = 1;
+
+export const { auth, handlers, signIn, signOut } = NextAuth({
   ...authConfig,
-  // Menggunakan 'as any' untuk melewati pengecekan ketat tipe AdapterUser
-  adapter: PrismaAdapter(prisma) as any, 
-  session: { 
-    strategy: "jwt",
-    maxAge: 30 * 60, // Sesi mati otomatis jika idle 30 menit
-  },
   providers: [
     Credentials({
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
         });
 
         if (!user || !user.password) return null;
 
-        const isValid = compareSync(credentials.password as string, user.password);
+        const isValid = await compare(credentials.password as string, user.password);
         if (!isValid) return null;
 
-        const updatedUser = await prisma.user.update({
+        // BUAT SESSION ID BARU
+        const newSessionId = crypto.randomUUID();
+
+        // UPDATE DATABASE: Simpan sessionId baru ini sebagai satu-satunya yang aktif
+        await prisma.user.update({
           where: { id: user.id },
-          data: { tokenVersion: { increment: 1 } },
+          data: { activeSessionId: newSessionId },
         });
 
-        return updatedUser;
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          sessionId: newSessionId, // Kirim ke JWT
+        };
       },
     }),
   ],
+  // src/auth.ts (Bagian Callbacks)
   callbacks: {
-    ...authConfig.callbacks,
-    async session({ session, token }) {
-      // Pastikan token memiliki id sebelum mengecek ke database
-      if (!token.id) return session;
+    ...authConfig.callbacks, 
 
-      const dbUser = await prisma.user.findUnique({
-        where: { id: token.id as string },
-      });
-
-      // Jika user tidak ada atau versi token tidak cocok (sudah login di tempat lain)
-      if (!dbUser || token.tokenVersion !== dbUser.tokenVersion) {
-        // Alih-alih mengembalikan objek kosong, kita kembalikan session standar tanpa user
-        // agar middleware mendeteksi user tidak login
-        return { ...session, user: { ...session.user, id: "" } };
+    async jwt({ token, user }) {
+      // 1. Saat Login Awal
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.sessionId = user.sessionId;
+        token.globalVersion = user.globalVersion;
       }
 
-      // Sinkronisasi data asli dari Database ke UI
-      session.user.id = dbUser.id;
-      session.user.role = dbUser.role;
-      session.user.name = dbUser.name;
-      session.user.email = dbUser.email;
+      // 2. Cek Validitas Sesi
+      // Gunakan pengecekan 'if (token.id)' untuk memastikan tidak undefined
+      if (token.id) {
+        if ((token.globalVersion as number) < GLOBAL_SESSION_VERSION) {
+            return null; 
+        }
 
+        if (token.sessionId) {
+            const dbUser = await prisma.user.findUnique({
+              // TypeScript aman di sini karena sudah di dalam block 'if (token.id)'
+              where: { id: token.id }, 
+              select: { activeSessionId: true, role: true },
+            });
+
+            if (!dbUser || dbUser.activeSessionId !== token.sessionId) {
+              return null;
+            }
+            if (dbUser.role) token.role = dbUser.role;
+        }
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (token && session.user) {
+        // Gunakan Type Casting jika diperlukan agar assignable ke session.user
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.sessionId = token.sessionId as string;
+      }
       return session;
     },
   },

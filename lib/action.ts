@@ -32,7 +32,7 @@ export const signInAction = async (prevState: unknown, formData: FormData) => {
 
   if (!validateFields.success) {
     return {
-      message: "Input tidak valid",
+      message: "Username atau Password salah!",
       error: validateFields.error.flatten().fieldErrors,
       success: false
     };
@@ -856,7 +856,7 @@ export const updateBarangKeluarAction = async (
   if (keterangan === "Diberikan") {
     keteranganFinal = detailKeterangan ? `Diberikan (${detailKeterangan})` : "Diberikan";
   } else if (keterangan === "Lainnya") {
-    keteranganFinal = detailKeterangan ? `Lainnya (${detailKeterangan})` : "Lainnya";
+    keteranganFinal = detailKeterangan ? `${detailKeterangan}` : "Lainnya";
   }
 
   try {

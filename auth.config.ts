@@ -1,35 +1,37 @@
+// src/auth.config.ts 
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
   pages: {
     signIn: "/login",
   },
-  providers: [], // Diisi di auth.ts
+  session: { strategy: "jwt" },
+  providers: [], 
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      // Cek apakah ada user dan apakah id-nya valid
-      const isLoggedIn = !!auth?.user && !!auth.user.id;
-      const isOnDashboard = nextUrl.pathname.startsWith("/admin");
+    async authorized({ auth, request: { nextUrl } }) {
+      const isLoggedIn = !!auth?.user?.id;
+      const role = auth?.user?.role;
+      const pathname = nextUrl.pathname;
 
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return false; // Redirect ke login jika tidak ada sesi riil
+      // Izinkan Admin DAN User masuk ke folder /admin
+      if (pathname.startsWith("/admin")) {
+        if (isLoggedIn && (role === "admin" || role === "user")) {
+          return true;
+        }
+        // Jika tidak login atau role tidak dikenal, lempar ke 403 atau login
+        return isLoggedIn ? Response.redirect(new URL("/403", nextUrl)) : false;
       }
-      return true;
+      
+      return isLoggedIn;
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.tokenVersion = user.tokenVersion;
-      }
-      return token;
-    },
+
     async session({ session, token }) {
-      if (session.user && token) {
-        session.user.id = token.id as string;
+      // Pindahkan data dari token ke session 
+      // Gunakan 'as string' untuk meyakinkan TypeScript nilainya tidak undefined 
+      if (token && session.user) {
+        session.user.id = token.id as string; 
         session.user.role = token.role as string;
-        session.user.tokenVersion = token.tokenVersion as number;
+        session.sessionId = token.sessionId as string; 
       }
       return session;
     },
